@@ -210,13 +210,14 @@ private:
             } else if (mode==1){
                 if (state==0) {go_forward();}
                 else if (state == 1) {
-                    while (compteur <= 5*TIME) {}
+                    while (compteur <= 5*TIME) {compteur += 1;}
                     state += 1;
+
                     compteur = 0;
                 }
                 else if (state == 2) {accel_decel_stop();}
                 else if (state == 3) {
-                    while (compteur <= 5*TIME) {}
+                    while (compteur <= 5*TIME) {compteur += 1;}
                     state += 1;
                     compteur = 0;
                 }
