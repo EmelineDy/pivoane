@@ -67,6 +67,7 @@ private:
     */
 
     int compteur = 0;
+    int state = 0;
 
     void joystickOrderCallback(const interfaces::msg::JoystickOrder & joyOrder) {
 
@@ -115,6 +116,9 @@ private:
             leftRearPwmCmd = STOP;
             rightRearPwmCmd = STOP;
             steeringPwmCmd = STOP;
+
+            state += 1;
+            compteur = 0;
         }
     }
 
@@ -130,6 +134,9 @@ private:
             leftRearPwmCmd = STOP;
             rightRearPwmCmd = STOP;
             steeringPwmCmd = STOP;
+
+            state += 1;
+            compteur = 0;
         }  
 
     }
@@ -154,6 +161,9 @@ private:
             leftRearPwmCmd = STOP;
             rightRearPwmCmd = STOP;
             steeringPwmCmd = STOP;
+
+            state += 1;
+            compteur = 0;
         }  
         
     }
@@ -165,6 +175,7 @@ private:
     */
     void motorsFeedbackCallback(const interfaces::msg::MotorsFeedback & motorsFeedback){
         currentAngle = motorsFeedback.steering_angle;
+        currentRPM = motorsFeedback.right_rear_speed;
     }
 
 
@@ -197,10 +208,26 @@ private:
 
             //Autonomous Mode
             } else if (mode==1){
-                go_forward();
+                if (state==0) {go_forward();}
+                else if (state == 1) {
+                    while (compteur <= 5*TIME) {}
+                    state += 1;
+                    compteur = 0;
+                }
+                else if (state == 2) {accel_decel_stop();}
+                else if (state == 3) {
+                    while (compteur <= 5*TIME) {}
+                    state += 1;
+                    compteur = 0;
+                }
+                else if (state == 4) {go_backward();}
+
+                int speed = (2*3.141592*currentRPM*9.5)/60;
+                RCLCPP_INFO(this->get_logger(), "%d", speed);
+                //autoSteeringCmd(steeringPwmCmd); //A créer
+
             }
         }
-
 
         //Send order to motors
         motorsOrder.left_rear_pwm = leftRearPwmCmd;
@@ -208,6 +235,7 @@ private:
         motorsOrder.steering_pwm = steeringPwmCmd;
 
         publisher_can_->publish(motorsOrder);
+
     }
 
 
@@ -275,6 +303,7 @@ private:
     
     //Motors feedback variables
     float currentAngle;
+    float currentRPM;
 
     //Manual Mode variables (with joystick control)
     bool reverse;
