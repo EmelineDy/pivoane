@@ -223,8 +223,8 @@ private:
                 }
                 else if (state == 4) {go_backward();}
 
-                int speed = (2*3.141592*currentRPM*9.5)/60;
-                RCLCPP_INFO(this->get_logger(), "%d", speed);
+                int speed = (2*3.141592*currentRPM*0.095)/60;
+                RCLCPP_INFO(this->get_logger(), "Speed = %d", speed);
                 //autoSteeringCmd(steeringPwmCmd); //A créer
 
             }
