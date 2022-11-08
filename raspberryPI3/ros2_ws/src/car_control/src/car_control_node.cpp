@@ -68,6 +68,8 @@ private:
 
     int compteur = 0;
     int state = 0;
+    int cur_PWM_R = 50;
+    int cur_PWM_L = 50;
 
     void joystickOrderCallback(const interfaces::msg::JoystickOrder & joyOrder) {
 
@@ -105,7 +107,7 @@ private:
 
     void go_forward(){
 
-        if(compteur<=20*TIME){
+        if(compteur<=10*TIME){
             leftRearPwmCmd = 100;
             rightRearPwmCmd = 100;
             steeringPwmCmd = 50;
@@ -124,7 +126,7 @@ private:
 
     void go_backward(){
 
-        if(compteur<=20*TIME){
+        if(compteur<=10*TIME){
             leftRearPwmCmd = 25;
             rightRearPwmCmd = 25;
             steeringPwmCmd = 50;
@@ -185,6 +187,21 @@ private:
         }  
     }
 
+    void straight_Traj(float RPM_R, float RPM_L, float rpm_target) {
+        int pwm_max = 100;
+        float rpm_max_l;
+        float rpm_max_r;
+
+        float error_l = rpm_target - RPM_L;
+        float error_r = rpm_target - RPM_R;
+
+        float correction_l = ((error_l / rpm_max_l) /2) * float(pwm_max);
+        float correction_r = ((error_r / rpm_max_r) /2) * float(pwm_max);
+
+        cur_PWM_L = min(float(100), max(float(50), cur_PWM_L+correction_l));
+        cur_PWM_R = min(float(100), max(float(50), cur_PWM_R+correction_r));
+
+    }
 
     /* Update currentAngle from motors feedback [callback function]  :
     *
@@ -229,9 +246,9 @@ private:
             } else if (mode==1){
                 if (state==0) {go_forward();}
                 else if (state == 1) {stop();}
-                else if (state == 2) {accel_decel_stop();}
-                else if (state == 3) {stop();}
-                else if (state == 4) {go_backward();}
+                else if (state == 2) {go_forward();}
+                //else if (state == 3) {stop();}
+                //else if (state == 4) {go_backward();}
 
                 float speedR = (2*3.141592*currentRPM_R*0.095)/60;
                 RCLCPP_INFO(this->get_logger(), "Speed right = %f \n", speedR);
