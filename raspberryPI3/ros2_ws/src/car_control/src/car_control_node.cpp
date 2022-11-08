@@ -68,8 +68,6 @@ private:
 
     int compteur = 0;
     int state = 0;
-    int cur_PWM_R = 50;
-    int cur_PWM_L = 50;
 
     void joystickOrderCallback(const interfaces::msg::JoystickOrder & joyOrder) {
 
@@ -189,17 +187,30 @@ private:
 
     void straight_Traj(float RPM_R, float RPM_L, float rpm_target) {
         int pwm_max = 100;
-        float rpm_max_l;
-        float rpm_max_r;
+        float rpm_max_l = 62.169998;
+        float rpm_max_r = 61.27;
 
-        float error_l = rpm_target - RPM_L;
-        float error_r = rpm_target - RPM_R;
+         if(compteur<=10*TIME){
 
-        float correction_l = ((error_l / rpm_max_l) /2) * float(pwm_max);
-        float correction_r = ((error_r / rpm_max_r) /2) * float(pwm_max);
+            float error_l = rpm_target - RPM_L;
+            float error_r = rpm_target - RPM_R;
 
-        cur_PWM_L = min(float(100), max(float(50), cur_PWM_L+correction_l));
-        cur_PWM_R = min(float(100), max(float(50), cur_PWM_R+correction_r));
+            float correction_l = ((error_l / rpm_max_l) /2) * float(pwm_max);
+            float correction_r = ((error_r / rpm_max_r) /2) * float(pwm_max);
+
+            leftRearPwmCmd = uint8_t(min(float(100), max(float(50), float(leftRearPwmCmd)+correction_l)));
+            rightRearPwmCmd = uint8_t(min(float(100), max(float(50), float(rightRearPwmCmd)+correction_r)));
+            steeringPwmCmd = 50;
+            compteur +=1;
+
+         } else{
+            leftRearPwmCmd = STOP;
+            rightRearPwmCmd = STOP;
+            steeringPwmCmd = 50;
+
+            state += 1;
+            compteur = 0;
+        }  
 
     }
 
@@ -246,7 +257,7 @@ private:
             } else if (mode==1){
                 if (state==0) {go_forward();}
                 else if (state == 1) {stop();}
-                else if (state == 2) {go_forward();}
+                else if (state == 2) {straight_Traj(currentRPM_R, currentRPM_L, 30);}
                 //else if (state == 3) {stop();}
                 //else if (state == 4) {go_backward();}
 
