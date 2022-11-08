@@ -251,10 +251,10 @@ private:
                 //else if (state == 4) {go_backward();}
 
                 float speedR = (2*3.141592*currentRPM_R*0.095)/60;
-                RCLCPP_INFO(this->get_logger(), "Speed right = %f \n", speedR);
+                RCLCPP_INFO(this->get_logger(), "Speed right = %f \n", currentRPM_R);
 
                 float speedL = (2*3.141592*currentRPM_L*0.095)/60;
-                RCLCPP_INFO(this->get_logger(), "Speed left = %f \n", speedL);
+                RCLCPP_INFO(this->get_logger(), "Speed left = %f \n", currentRPM_L);
 
             }
         }
