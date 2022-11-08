@@ -198,8 +198,8 @@ private:
             RCLCPP_INFO(this->get_logger(), "Error left = %f \n", error_l);
             RCLCPP_INFO(this->get_logger(), "Error right = %f \n", error_r);
 
-            float correction_l = ((error_l / rpm_max_l) /2) * float(pwm_max);
-            float correction_r = ((error_r / rpm_max_r) /2) * float(pwm_max);
+            float correction_l = ((error_l / rpm_max_l) /2) * float(pwm_max)*0.3;
+            float correction_r = ((error_r / rpm_max_r) /2) * float(pwm_max)*0.3;
 
             leftRearPwmCmd = uint8_t(min(float(100), max(float(65), float(leftRearPwmCmd)+correction_l)));
             rightRearPwmCmd = uint8_t(min(float(100), max(float(65), float(rightRearPwmCmd)+correction_r)));
@@ -261,8 +261,6 @@ private:
                 if (state==0) {straight_Traj(currentRPM_R, currentRPM_L, 10);}
                 else if (state == 1) {straight_Traj(currentRPM_R, currentRPM_L, 15);}
                 else if (state == 2) {straight_Traj(currentRPM_R, currentRPM_L, 20);}
-                //else if (state == 3) {stop();}
-                //else if (state == 4) {go_backward();}
 
                // float speedR = (2*3.141592*currentRPM_R*0.095)/60;
                 RCLCPP_INFO(this->get_logger(), "Speed right = %f \n", currentRPM_R);
