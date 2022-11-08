@@ -198,8 +198,8 @@ private:
             float correction_l = ((error_l / rpm_max_l) /2) * float(pwm_max);
             float correction_r = ((error_r / rpm_max_r) /2) * float(pwm_max);
 
-            leftRearPwmCmd = uint8_t(min(float(100), max(float(50), float(leftRearPwmCmd)+correction_l)));
-            rightRearPwmCmd = uint8_t(min(float(100), max(float(50), float(rightRearPwmCmd)+correction_r)));
+            leftRearPwmCmd = uint8_t(min(float(100), max(float(65), float(leftRearPwmCmd)+correction_l)));
+            rightRearPwmCmd = uint8_t(min(float(100), max(float(65), float(rightRearPwmCmd)+correction_r)));
             steeringPwmCmd = 50;
             compteur +=1;
 
