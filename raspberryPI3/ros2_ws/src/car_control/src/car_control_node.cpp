@@ -194,6 +194,9 @@ private:
 
             float error_l = rpm_target - RPM_L;
             float error_r = rpm_target - RPM_R;
+            
+            RCLCPP_INFO(this->get_logger(), "Error left = %f \n", error_l);
+            RCLCPP_INFO(this->get_logger(), "Error right = %f \n", error_r);
 
             float correction_l = ((error_l / rpm_max_l) /2) * float(pwm_max);
             float correction_r = ((error_r / rpm_max_r) /2) * float(pwm_max);
@@ -261,10 +264,10 @@ private:
                 //else if (state == 3) {stop();}
                 //else if (state == 4) {go_backward();}
 
-                float speedR = (2*3.141592*currentRPM_R*0.095)/60;
+               // float speedR = (2*3.141592*currentRPM_R*0.095)/60;
                 RCLCPP_INFO(this->get_logger(), "Speed right = %f \n", currentRPM_R);
 
-                float speedL = (2*3.141592*currentRPM_L*0.095)/60;
+               // float speedL = (2*3.141592*currentRPM_L*0.095)/60;
                 RCLCPP_INFO(this->get_logger(), "Speed left = %f \n", currentRPM_L);
 
             }
