@@ -169,7 +169,7 @@ private:
     }
 
     void stop() {
-         if(compteur<=5*TIME){
+         if(compteur<=1*TIME){
             leftRearPwmCmd = STOP;
             rightRearPwmCmd = STOP;
             steeringPwmCmd = 50;
@@ -190,7 +190,7 @@ private:
         float rpm_max_l = 62.169998;
         float rpm_max_r = 61.27;
 
-         if(compteur<=10*TIME){
+         if(compteur<=2*TIME){
 
             float error_l = rpm_target - RPM_L;
             float error_r = rpm_target - RPM_R;
@@ -255,9 +255,9 @@ private:
 
             //Autonomous Mode
             } else if (mode==1){
-                if (state==0) {straight_Traj(currentRPM_R, currentRPM_L, 30);}
+                if (state==0) {straight_Traj(currentRPM_R, currentRPM_L, 5);}
                 else if (state == 1) {stop();}
-                //else if (state == 2) {straight_Traj(currentRPM_R, currentRPM_L, 30);}
+                else if (state == 2) {straight_Traj(currentRPM_R, currentRPM_L, 10);}
                 //else if (state == 3) {stop();}
                 //else if (state == 4) {go_backward();}
 
