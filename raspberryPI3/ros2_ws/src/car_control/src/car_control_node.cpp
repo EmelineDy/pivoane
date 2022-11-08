@@ -255,9 +255,9 @@ private:
 
             //Autonomous Mode
             } else if (mode==1){
-                if (state==0) {straight_Traj(currentRPM_R, currentRPM_L, 5);}
-                else if (state == 1) {stop();}
-                else if (state == 2) {straight_Traj(currentRPM_R, currentRPM_L, 10);}
+                if (state==0) {straight_Traj(currentRPM_R, currentRPM_L, 10);}
+                else if (state == 1) {straight_Traj(currentRPM_R, currentRPM_L, 15);}
+                else if (state == 2) {straight_Traj(currentRPM_R, currentRPM_L, 20);}
                 //else if (state == 3) {stop();}
                 //else if (state == 4) {go_backward();}
 
