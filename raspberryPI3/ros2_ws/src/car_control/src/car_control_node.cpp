@@ -115,7 +115,7 @@ private:
         else{
             leftRearPwmCmd = STOP;
             rightRearPwmCmd = STOP;
-            steeringPwmCmd = STOP;
+            steeringPwmCmd = 50;
 
             state += 1;
             compteur = 0;
@@ -133,7 +133,7 @@ private:
         else{
             leftRearPwmCmd = STOP;
             rightRearPwmCmd = STOP;
-            steeringPwmCmd = STOP;
+            steeringPwmCmd = 50;
 
             state += 1;
             compteur = 0;
@@ -160,13 +160,31 @@ private:
         else{
             leftRearPwmCmd = STOP;
             rightRearPwmCmd = STOP;
-            steeringPwmCmd = STOP;
+            steeringPwmCmd = 50;
 
             state += 1;
             compteur = 0;
         }  
         
     }
+
+    void stop() {
+         if(compteur<=5*TIME){
+            leftRearPwmCmd = STOP;
+            rightRearPwmCmd = STOP;
+            steeringPwmCmd = 50;
+            compteur+=1;
+        }
+        else{
+            leftRearPwmCmd = STOP;
+            rightRearPwmCmd = STOP;
+            steeringPwmCmd = 50;
+
+            state += 1;
+            compteur = 0;
+        }  
+    }
+
 
     /* Update currentAngle from motors feedback [callback function]  :
     *
@@ -175,7 +193,8 @@ private:
     */
     void motorsFeedbackCallback(const interfaces::msg::MotorsFeedback & motorsFeedback){
         currentAngle = motorsFeedback.steering_angle;
-        currentRPM = motorsFeedback.right_rear_speed;
+        currentRPM_R = motorsFeedback.right_rear_speed;
+        currentRPM_L = motorsFeedback.left_rear_speed;
     }
 
 
@@ -209,23 +228,16 @@ private:
             //Autonomous Mode
             } else if (mode==1){
                 if (state==0) {go_forward();}
-                else if (state == 1) {
-                    while (compteur <= 5*TIME) {compteur += 1;}
-                    state += 1;
-
-                    compteur = 0;
-                }
+                else if (state == 1) {stop();}
                 else if (state == 2) {accel_decel_stop();}
-                else if (state == 3) {
-                    while (compteur <= 5*TIME) {compteur += 1;}
-                    state += 1;
-                    compteur = 0;
-                }
+                else if (state == 3) {stop();}
                 else if (state == 4) {go_backward();}
 
-                int speed = (2*3.141592*currentRPM*0.095)/60;
-                RCLCPP_INFO(this->get_logger(), "Speed = %d", speed);
-                //autoSteeringCmd(steeringPwmCmd); //A créer
+                float speedR = (2*3.141592*currentRPM_R*0.095)/60;
+                RCLCPP_INFO(this->get_logger(), "Speed right = %f \n", speedR);
+
+                float speedL = (2*3.141592*currentRPM_L*0.095)/60;
+                RCLCPP_INFO(this->get_logger(), "Speed left = %f \n", speedL);
 
             }
         }
@@ -304,7 +316,8 @@ private:
     
     //Motors feedback variables
     float currentAngle;
-    float currentRPM;
+    float currentRPM_R;
+    float currentRPM_L;
 
     //Manual Mode variables (with joystick control)
     bool reverse;
