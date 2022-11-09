@@ -272,7 +272,7 @@ private:
                 RCLCPP_INFO(this->get_logger(), "Speed left = %f \n", currentRPM_L);
                 */
 
-               cmd_RearSpeed = 40;
+                float cmd_RearSpeed = 40;
                 //Calcul de l'erreur pour le gain Kp
                 float speedErrorLeft = cmd_RearSpeed - currentRPM_L;
                 float speedErrorRight = cmd_RearSpeed - currentRPM_R;
@@ -288,8 +288,8 @@ private:
                 previousSpeedErrorRight = speedErrorRight;
 
                 //Calcul de la commande à envoyer à chacun des moteurs (gauche et droite)
-                leftRearPwmCmd = speedErrorLeft * 1 + sumIntegralLeft * 0.01;
-                rightRearPwmCmd = speedErrorRight * 1 + sumIntegralRight * 0.01;
+                leftRearPwmCmd = speedErrorLeft * 1 + sumIntegralL * 0.01;
+                rightRearPwmCmd = speedErrorRight * 1 + sumIntegralR * 0.01;
 
                 //Pour éviter de casser le moteur,
                 // on évite de le retour en arrière du moteur en empêchant une commande < 50
