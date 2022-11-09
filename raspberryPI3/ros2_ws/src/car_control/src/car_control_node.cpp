@@ -307,8 +307,8 @@ private:
                 rightRearPwmCmd += 50;
             }
 
-            }
         }
+        
 
         //Send order to motors
         motorsOrder.left_rear_pwm = leftRearPwmCmd;
