@@ -103,11 +103,11 @@ private:
 
     /* added functions by team Beth*/
 
-    void go_forward(){
+    void go_forward(int speed){
 
-        if(compteur<=10*TIME){
-            leftRearPwmCmd = 100;
-            rightRearPwmCmd = 100;
+        if(compteur<=2*TIME){
+            leftRearPwmCmd = speed;
+            rightRearPwmCmd = speed;
             steeringPwmCmd = 50;
 
             compteur+=1;
@@ -190,7 +190,7 @@ private:
         float rpm_max_l = 62.169998;
         float rpm_max_r = 61.27;
 
-         if(compteur<=2*TIME){
+         if(compteur<=5*TIME){
 
             float error_l = rpm_target - RPM_L;
             float error_r = rpm_target - RPM_R;
@@ -198,11 +198,11 @@ private:
             RCLCPP_INFO(this->get_logger(), "Error left = %f \n", error_l);
             RCLCPP_INFO(this->get_logger(), "Error right = %f \n", error_r);
 
-            float correction_l = ((error_l / rpm_max_l) /2) * float(pwm_max)*0.3;
-            float correction_r = ((error_r / rpm_max_r) /2) * float(pwm_max)*0.3;
+            float correction_l = ((error_l / rpm_max_l) /2) * float(pwm_max);
+            float correction_r = ((error_r / rpm_max_r) /2) * float(pwm_max);
 
-            leftRearPwmCmd = uint8_t(min(float(100), max(float(65), float(leftRearPwmCmd)+correction_l)));
-            rightRearPwmCmd = uint8_t(min(float(100), max(float(65), float(rightRearPwmCmd)+correction_r)));
+            leftRearPwmCmd = uint8_t(min(float(100), max(float(55), float(leftRearPwmCmd)+correction_l)));
+            rightRearPwmCmd = uint8_t(min(float(100), max(float(55), float(rightRearPwmCmd)+correction_r)));
             steeringPwmCmd = 50;
             compteur +=1;
 
@@ -260,12 +260,12 @@ private:
             } else if (mode==1){
                 if (state==0) {straight_Traj(currentRPM_R, currentRPM_L, 10);}
                 else if (state == 1) {straight_Traj(currentRPM_R, currentRPM_L, 15);}
-                else if (state == 2) {straight_Traj(currentRPM_R, currentRPM_L, 20);}
+                else if (state == 2) {stop();}
+                else if (state == 3) {go_forward(55);}
+                else if (state == 4) {go_forward(60);}
+                else if (state == 5) {go_forward(65);}
 
-               // float speedR = (2*3.141592*currentRPM_R*0.095)/60;
                 RCLCPP_INFO(this->get_logger(), "Speed right = %f \n", currentRPM_R);
-
-               // float speedL = (2*3.141592*currentRPM_L*0.095)/60;
                 RCLCPP_INFO(this->get_logger(), "Speed left = %f \n", currentRPM_L);
 
             }
