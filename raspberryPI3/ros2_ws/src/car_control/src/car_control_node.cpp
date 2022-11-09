@@ -68,6 +68,12 @@ private:
 
     int compteur = 0;
     int state = 0;
+    int sumIntegralL = 0;
+    int sumIntegralR = 0;
+    float deltaErrorRight;
+    float deltaErrorLeft;
+    float previousSpeedErrorLeft ;
+    float previousSpeedErrorRight;
 
     void joystickOrderCallback(const interfaces::msg::JoystickOrder & joyOrder) {
 
@@ -258,11 +264,48 @@ private:
 
             //Autonomous Mode
             } else if (mode==1){
+                /*
                 if (state==0) {straight_Traj(currentRPM_R, currentRPM_L, 10);}
                 else if (state == 1) {straight_Traj(currentRPM_R, currentRPM_L, 15);}
 
                 RCLCPP_INFO(this->get_logger(), "Speed right = %f \n", currentRPM_R);
                 RCLCPP_INFO(this->get_logger(), "Speed left = %f \n", currentRPM_L);
+                */
+
+               cmd_RearSpeed = 40;
+                //Calcul de l'erreur pour le gain Kp
+                float speedErrorLeft = cmd_RearSpeed - currentRPM_L;
+                float speedErrorRight = cmd_RearSpeed - currentRPM_R;
+
+                //Calcul de l'erreur pour le gain Ki
+		        sumIntegralL += speedErrorLeft;
+                sumIntegralR += speedErrorRight;
+
+                //Calcul de l'erreur pour le gain Kd
+                deltaErrorLeft = speedErrorLeft - previousSpeedErrorLeft;
+                deltaErrorRight = speedErrorRight - previousSpeedErrorRight;
+                previousSpeedErrorLeft = speedErrorLeft;
+                previousSpeedErrorRight = speedErrorRight;
+
+                //Calcul de la commande à envoyer à chacun des moteurs (gauche et droite)
+                leftRearPwmCmd = speedErrorLeft * 1 + sumIntegralLeft * 0.01;
+                rightRearPwmCmd = speedErrorRight * 1 + sumIntegralRight * 0.01;
+
+                //Pour éviter de casser le moteur,
+                // on évite de le retour en arrière du moteur en empêchant une commande < 50
+                if(leftRearPwmCmd < 0)
+                    leftRearPwmCmd = 0;
+                else if(leftRearPwmCmd > 50)
+                    leftRearPwmCmd = 50;
+
+                if(rightRearPwmCmd < 0)
+                    rightRearPwmCmd = 0;
+                else if(rightRearPwmCmd > 50)
+                    rightRearPwmCmd = 50;
+
+                leftRearPwmCmd += 50;
+                rightRearPwmCmd += 50;
+            }
 
             }
         }
