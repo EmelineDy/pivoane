@@ -110,7 +110,7 @@ private:
 
     /* added functions by team Beth*/
 
-    void speed(float currentRPM_R, float currentRPM_L, float rpm_target) {
+    void speed(float rpm_target) {
         
         //int n_micro_step = 5; 
         //float micro_step_rpm_target = rpm_target/static_cast<float>(n_micro_step);
@@ -179,15 +179,15 @@ private:
     void accel_decel_stop(float RPM_R, float RPM_L){
         
         if(compteur <= 5*TIME){
-            speed(RPM_R, RPM_L, 60);
+            speed(60);
             compteur+=1;
         }
         else if((5*TIME < compteur) && (compteur <= 10*TIME)){
-            speed(RPM_R, RPM_L, 30);
+            speed(30);
             compteur+=1;            
         }
         else{
-            speed(RPM_R, RPM_L, 0);
+            speed(0);
             compteur = 0;
         }     
     }
@@ -242,7 +242,7 @@ private:
 
             //Manual Mode
             if (mode==0){
-                
+                RCLCPP_INFO(this->get_logger(), "Manual mode");
                 manualPropulsionCmd(requestedThrottle, reverse, leftRearPwmCmd,rightRearPwmCmd);
                 steeringCmd(requestedSteerAngle,currentAngle, steeringPwmCmd);
 
@@ -250,7 +250,8 @@ private:
 
             //Autonomous Mode
             } else if (mode==1){
-               speed(currentRPM_L, currentRPM_R, 40);
+                RCLCPP_INFO(this->get_logger(), "Autonomous mode");
+                speed(40);
             }
 
         }
