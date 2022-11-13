@@ -76,6 +76,11 @@ private:
     float previousrpmErrorLeft ;
     float previousrpmErrorRight;
 
+    float previousSpeedErrorLeft;
+    float previousSpeedErrorRight;
+    float sumIntegralLeft;
+    float sumIntegralRight;
+
     void joystickOrderCallback(const interfaces::msg::JoystickOrder & joyOrder) {
 
         if (joyOrder.start != start){
@@ -116,7 +121,7 @@ private:
         //float micro_step_rpm_target = rpm_target/static_cast<float>(n_micro_step);
 
         //
-        RCLCPP_INFO(this->get_logger(), "Begin speed %f %f %f", currentRPM_R,currentRPM_L, rpm_target);
+        RCLCPP_INFO(this->get_logger(), "Begin speed");
 
 
         //Calcul de l'erreur pour le gain Kp
@@ -140,7 +145,7 @@ private:
         leftRearPwmCmd += 50;
         rightRearPwmCmd += 50;
 
-        RCLCPP_INFO(this->get_logger(), "Error %f %f", iErrorL, iErrorR);
+        RCLCPP_INFO(this->get_logger(), "End speed");
 
 
     }
@@ -176,7 +181,7 @@ private:
         }  
     }
 
-    void accel_decel_stop(float RPM_R, float RPM_L){
+    void accel_decel_stop(){
         
         if(compteur <= 5*TIME){
             speed(60);
@@ -191,7 +196,7 @@ private:
             compteur = 0;
         }     
     }
-
+    /*
     void straight_Traj(float RPM_R, float RPM_L, float rpm_target) {
         int pwm_max = 100;
         float rpm_max_l = 62.169998;
@@ -207,6 +212,7 @@ private:
             rightRearPwmCmd = uint8_t(min(float(100), max(float(50), float(rightRearPwmCmd)+correction_r)));
             steeringPwmCmd = 50;
     }  
+    */
 
    
     /* Update currentAngle from motors feedback [callback function]  :
@@ -233,6 +239,11 @@ private:
 
         auto motorsOrder = interfaces::msg::MotorsOrder();
 
+        float leftPwmCmd;
+        float rightPwmCmd;
+        float speedErrorLeft;
+        float speedErrorRight;
+
         if (!start){    //Car stopped
             leftRearPwmCmd = STOP;
             rightRearPwmCmd = STOP;
@@ -251,7 +262,45 @@ private:
             //Autonomous Mode
             } else if (mode==1){
                 RCLCPP_INFO(this->get_logger(), "Autonomous mode");
-                speed(40);
+                //speed(40);
+
+                float cmd_RearSpeed = 40;
+                //Calcul de l'erreur pour le gain Kp
+                speedErrorLeft = cmd_RearSpeed - currentRPM_L;
+                speedErrorRight = cmd_RearSpeed - currentRPM_R;
+
+                //Calcul de l'erreur pour le gain Ki
+		        sumIntegralLeft += speedErrorLeft;
+                sumIntegralRight += speedErrorRight;
+
+                //Calcul de l'erreur pour le gain Kd
+                deltaErrorLeft = speedErrorLeft - previousSpeedErrorLeft;
+                deltaErrorRight = speedErrorRight - previousSpeedErrorRight;
+                previousSpeedErrorLeft = speedErrorLeft;
+                previousSpeedErrorRight = speedErrorRight;
+
+                //Calcul de la commande à envoyer à chacun des moteurs (gauche et droite)
+                leftPwmCmd = speedErrorLeft * 1 + sumIntegralLeft * 0.01;
+                rightPwmCmd = speedErrorRight * 1 + sumIntegralRight * 0.01;
+
+                //Pour éviter de casser le moteur,
+                // on évite de le retour en arrière du moteur en empêchant une commande < 50
+                if(leftPwmCmd < 0)
+                    leftPwmCmd = 0;
+                else if(leftPwmCmd > 50)
+                    leftPwmCmd = 50;
+
+                if(rightPwmCmd < 0)
+                    rightPwmCmd = 0;
+                else if(rightPwmCmd > 50)
+                    rightPwmCmd = 50;
+
+                leftPwmCmd += 50;
+                rightPwmCmd += 50;
+
+
+                leftRearPwmCmd = leftPwmCmd;
+                rightRearPwmCmd = rightPwmCmd;
             }
 
         }
