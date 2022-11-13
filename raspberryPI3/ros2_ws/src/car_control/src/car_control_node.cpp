@@ -116,6 +116,7 @@ private:
         //float micro_step_rpm_target = rpm_target/static_cast<float>(n_micro_step);
 
         //
+        RCLCPP_INFO(this->get_logger(), "Begin speed %f %f %f", currentRPM_R,currentRPM_L, rpm_target);
 
 
         //Calcul de l'erreur pour le gain Kp
@@ -138,6 +139,10 @@ private:
 
         leftRearPwmCmd += 50;
         rightRearPwmCmd += 50;
+
+        RCLCPP_INFO(this->get_logger(), "Error %f %f", iErrorL, iErrorR);
+
+
     }
 
 
