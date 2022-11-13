@@ -111,6 +111,12 @@ private:
     /* added functions by team Beth*/
 
     void speed(float currentRPM_R, float currentRPM_L, float rpm_target) {
+        
+        //int n_micro_step = 5; 
+        //float micro_step_rpm_target = rpm_target/static_cast<float>(n_micro_step);
+
+        //
+
 
         //Calcul de l'erreur pour le gain Kp
         rpmErrorLeft = rpm_target - currentRPM_L;
@@ -135,10 +141,10 @@ private:
     }
 
 
-    void go_forward(int speed){
+    void go_forward(int speed_goal){
         if(compteur<=2*TIME){
-            leftRearPwmCmd = speed;
-            rightRearPwmCmd = speed;
+            leftRearPwmCmd = speed_goal;
+            rightRearPwmCmd = speed_goal;
             steeringPwmCmd = 50;
             compteur+=1;
         }
