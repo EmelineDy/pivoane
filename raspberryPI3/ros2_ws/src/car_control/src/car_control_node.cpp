@@ -199,19 +199,16 @@ private:
 
     void accel_decel_stop(){
         
-        if(compteur <= 2*TIME){
-            leftRearPwmCmd = 100;
-            rightRearPwmCmd =100;
+        if(compteur <= 5*TIME){
+            speed(60);
             compteur+=1;
         }
-        else if((2*TIME < compteur) && (compteur <= 4*TIME)){
-            leftRearPwmCmd = 75;
-            rightRearPwmCmd = 75;
+        else if((5*TIME < compteur) && (compteur <= 10*TIME)){
+            speed(30);
             compteur+=1;            
         }
         else{
-            leftRearPwmCmd = 50;
-            rightRearPwmCmd = 50;
+            speed(0);
         }     
     }
     /*
@@ -273,51 +270,9 @@ private:
 
             //Autonomous Mode
             } else if (mode==1){
-                speed(40);
-                /*
-                //accel_decel_stop();
-
-                float cmd_RearSpeed = 40;
                 
-                //Calcul de l'erreur pour le gain Kp
-                speedErrorLeft = cmd_RearSpeed - currentRPM_L;
-                speedErrorRight = cmd_RearSpeed - currentRPM_R;
+                accel_decel_stop();
 
-                //Calcul de l'erreur pour le gain Ki
-		        sumIntegralLeft += speedErrorLeft;
-                sumIntegralRight += speedErrorRight;
-                */
-                //Calcul de l'erreur pour le gain Kd
-                /*
-                deltaErrorLeft = speedErrorLeft - previousSpeedErrorLeft;
-                deltaErrorRight = speedErrorRight - previousSpeedErrorRight;
-                previousSpeedErrorLeft = speedErrorLeft;
-                previousSpeedErrorRight = speedErrorRight;
-                */
-                /*
-                //Calcul de la commande à envoyer à chacun des moteurs (gauche et droite)
-                leftPwmCmd = speedErrorLeft * 1 + sumIntegralLeft * 0.01;
-                rightPwmCmd = speedErrorRight * 1 + sumIntegralRight * 0.01;
-
-                //Pour éviter de casser le moteur,
-                // on évite de le retour en arrière du moteur en empêchant une commande < 50
-                if(leftPwmCmd < 0)
-                    leftPwmCmd = 0;
-                else if(leftPwmCmd > 50)
-                    leftPwmCmd = 50;
-
-                if(rightPwmCmd < 0)
-                    rightPwmCmd = 0;
-                else if(rightPwmCmd > 50)
-                    rightPwmCmd = 50;
-
-                leftPwmCmd += 50;
-                rightPwmCmd += 50;
-
-
-                leftRearPwmCmd = leftPwmCmd;
-                rightRearPwmCmd = rightPwmCmd;
-                */
             }
 
         }
