@@ -119,37 +119,49 @@ private:
 
     /* added functions by team Beth*/
 
-    void speed(float rpm_target) {
+    void speed(float cmd_RearSpeed) {
         
         //int n_micro_step = 5; 
         //float micro_step_rpm_target = rpm_target/static_cast<float>(n_micro_step);
-
-        //
-        RCLCPP_INFO(this->get_logger(), "Begin speed");
-
-
+        
         //Calcul de l'erreur pour le gain Kp
-        rpmErrorLeft = rpm_target - currentRPM_L;
-        rpmErrorRight = rpm_target - currentRPM_R;
+        speedErrorLeft = cmd_RearSpeed - currentRPM_L;
+        speedErrorRight = cmd_RearSpeed - currentRPM_R;
 
         //Calcul de l'erreur pour le gain Ki
-        iErrorL += rpmErrorLeft;
-        iErrorR += rpmErrorRight;
+        sumIntegralLeft += speedErrorLeft;
+        sumIntegralRight += speedErrorRight;
 
         //Calcul de l'erreur pour le gain Kd
-        deltaErrorLeft = rpmErrorLeft - previousrpmErrorLeft;
-        deltaErrorRight = rpmErrorRight - previousrpmErrorRight;
-        previousrpmErrorLeft = rpmErrorLeft;
-        previousrpmErrorRight = rpmErrorRight;
+        /*
+        deltaErrorLeft = speedErrorLeft - previousSpeedErrorLeft;
+        deltaErrorRight = speedErrorRight - previousSpeedErrorRight;
+        previousSpeedErrorLeft = speedErrorLeft;
+        previousSpeedErrorRight = speedErrorRight;
+        */
 
         //Calcul de la commande à envoyer à chacun des moteurs (gauche et droite)
-        leftRearPwmCmd = min(50, max (0, int(rpmErrorLeft * 1 + iErrorL * 0.01)));
-        rightRearPwmCmd = min(50, max(0, int(rpmErrorRight * 1 + iErrorR * 0.01)));
+        leftPwmCmd = speedErrorLeft * 1 + sumIntegralLeft * 0.01;
+        rightPwmCmd = speedErrorRight * 1 + sumIntegralRight * 0.01;
 
-        leftRearPwmCmd += 50;
-        rightRearPwmCmd += 50;
+        //Pour éviter de casser le moteur,
+        // on évite de le retour en arrière du moteur en empêchant une commande < 50
+        if(leftPwmCmd < 0)
+            leftPwmCmd = 0;
+        else if(leftPwmCmd > 50)
+            leftPwmCmd = 50;
 
-        RCLCPP_INFO(this->get_logger(), "End speed");
+        if(rightPwmCmd < 0)
+            rightPwmCmd = 0;
+        else if(rightPwmCmd > 50)
+            rightPwmCmd = 50;
+
+        leftPwmCmd += 50;
+        rightPwmCmd += 50;
+
+
+        leftRearPwmCmd = leftPwmCmd;
+        rightRearPwmCmd = rightPwmCmd;
 
 
     }
@@ -261,6 +273,8 @@ private:
 
             //Autonomous Mode
             } else if (mode==1){
+                speed(40);
+                /*
                 //accel_decel_stop();
 
                 float cmd_RearSpeed = 40;
@@ -272,7 +286,7 @@ private:
                 //Calcul de l'erreur pour le gain Ki
 		        sumIntegralLeft += speedErrorLeft;
                 sumIntegralRight += speedErrorRight;
-
+                */
                 //Calcul de l'erreur pour le gain Kd
                 /*
                 deltaErrorLeft = speedErrorLeft - previousSpeedErrorLeft;
@@ -280,7 +294,7 @@ private:
                 previousSpeedErrorLeft = speedErrorLeft;
                 previousSpeedErrorRight = speedErrorRight;
                 */
-
+                /*
                 //Calcul de la commande à envoyer à chacun des moteurs (gauche et droite)
                 leftPwmCmd = speedErrorLeft * 1 + sumIntegralLeft * 0.01;
                 rightPwmCmd = speedErrorRight * 1 + sumIntegralRight * 0.01;
@@ -303,6 +317,7 @@ private:
 
                 leftRearPwmCmd = leftPwmCmd;
                 rightRearPwmCmd = rightPwmCmd;
+                */
             }
 
         }
