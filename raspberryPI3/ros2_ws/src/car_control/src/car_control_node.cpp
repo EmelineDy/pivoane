@@ -67,6 +67,7 @@ private:
     */
 
     int compteur = 0;
+    int compteur_ramp = 0;
     int iErrorL = 0;
     int iErrorR = 0;
     float deltaErrorRight;
@@ -75,12 +76,15 @@ private:
     float rpmErrorRight;
     float previousrpmErrorLeft ;
     float previousrpmErrorRight;
+    float micro_step_rpm_target;
+    float ramp_cmd_RearSpeed;
+    int n_micro_step;
 
     float previousSpeedErrorLeft;
     float previousSpeedErrorRight;
     float sumIntegralLeft = 0;
     float sumIntegralRight = 0;
-    float leftPwmCmd;
+    float leftPwmCmd ;
     float rightPwmCmd;
     float speedErrorLeft;
     float speedErrorRight;
@@ -121,12 +125,23 @@ private:
 
     void speed(float cmd_RearSpeed) {
         
-        //int n_micro_step = 5; 
-        //float micro_step_rpm_target = rpm_target/static_cast<float>(n_micro_step);
+        n_micro_step = 10; 
         
+        if (compteur_ramp==0){
+            previous_currentRPM = (currentRPM_L + currentRPM_R)/2.0;
+            micro_step_rpm_target = (cmd_RearSpeed-previous_currentRPM)/static_cast<float>(n_micro_step);
+        }
+
+        if (compteur_ramp<n_micro_step){
+            compteur_ramp++;
+        }
+
+
+        ramp_cmd_RearSpeed = previous_currentRPM + compteur_ramp * micro_step_rpm_target;
+
         //Calcul de l'erreur pour le gain Kp
-        speedErrorLeft = cmd_RearSpeed - currentRPM_L;
-        speedErrorRight = cmd_RearSpeed - currentRPM_R;
+        speedErrorLeft = ramp_cmd_RearSpeed - currentRPM_L;
+        speedErrorRight = ramp_cmd_RearSpeed - currentRPM_R;
 
         //Calcul de l'erreur pour le gain Ki
         sumIntegralLeft += speedErrorLeft;
@@ -200,14 +215,17 @@ private:
     void accel_decel_stop(){
         
         if(compteur <= 5*TIME){
+            compteur_ramp=0;
             speed(60);
             compteur+=1;
         }
         else if((5*TIME < compteur) && (compteur <= 10*TIME)){
+            compteur_ramp=0;
             speed(30);
             compteur+=1;            
         }
         else{
+            compteur_ramp=0;
             speed(0);
         }     
     }
@@ -270,7 +288,7 @@ private:
 
             //Autonomous Mode
             } else if (mode==1){
-                
+
                 accel_decel_stop();
 
             }
@@ -354,6 +372,7 @@ private:
     float currentAngle;
     float currentRPM_R;
     float currentRPM_L;
+    float previous_currentRPM;
 
     //Manual Mode variables (with joystick control)
     bool reverse;
