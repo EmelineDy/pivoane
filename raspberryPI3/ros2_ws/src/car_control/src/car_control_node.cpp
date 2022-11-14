@@ -125,7 +125,7 @@ private:
 
     void speed(float cmd_RearSpeed) {
         
-        n_micro_step = 30; 
+        n_micro_step = 10; 
         
         if (compteur_ramp==0){
             previous_currentRPM = (currentRPM_L + currentRPM_R)/2.0;
@@ -214,12 +214,12 @@ private:
 
     void accel_decel_stop(){
         
-        if(compteur <= 10*TIME){
+        if(compteur <= 5*TIME){
             compteur_ramp=0;
             speed(60);
             compteur+=1;
         }
-        else if((10*TIME < compteur) && (compteur <= 20*TIME)){
+        else if((5*TIME < compteur) && (compteur <= 10*TIME)){
             compteur_ramp=0;
             speed(30);
             compteur+=1;            
