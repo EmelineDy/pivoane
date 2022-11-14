@@ -125,7 +125,7 @@ private:
 
     void speed(float cmd_RearSpeed) {
         
-        n_micro_step = 10; 
+        n_micro_step = 30; 
         
         if (compteur_ramp==0){
             previous_currentRPM = (currentRPM_L + currentRPM_R)/2.0;
