@@ -80,6 +80,10 @@ private:
     float previousSpeedErrorRight;
     float sumIntegralLeft;
     float sumIntegralRight;
+    float leftPwmCmd;
+    float rightPwmCmd;
+    float speedErrorLeft;
+    float speedErrorRight;
 
     void joystickOrderCallback(const interfaces::msg::JoystickOrder & joyOrder) {
 
@@ -183,16 +187,19 @@ private:
 
     void accel_decel_stop(){
         
-        if(compteur <= 5*TIME){
-            speed(60);
+        if(compteur <= 2*TIME){
+            leftRearPwmCmd = 100;
+            rightRearPwmCmd =100;
             compteur+=1;
         }
-        else if((5*TIME < compteur) && (compteur <= 10*TIME)){
-            speed(30);
+        else if((2*TIME < compteur) && (compteur <= 4*TIME)){
+            leftRearPwmCmd = 75;
+            rightRearPwmCmd = 75;
             compteur+=1;            
         }
         else{
-            speed(0);
+            leftRearPwmCmd = 50;
+            rightRearPwmCmd = 50;
             compteur = 0;
         }     
     }
@@ -239,11 +246,6 @@ private:
 
         auto motorsOrder = interfaces::msg::MotorsOrder();
 
-        float leftPwmCmd;
-        float rightPwmCmd;
-        float speedErrorLeft;
-        float speedErrorRight;
-
         if (!start){    //Car stopped
             leftRearPwmCmd = STOP;
             rightRearPwmCmd = STOP;
@@ -253,7 +255,6 @@ private:
 
             //Manual Mode
             if (mode==0){
-                RCLCPP_INFO(this->get_logger(), "Manual mode");
                 manualPropulsionCmd(requestedThrottle, reverse, leftRearPwmCmd,rightRearPwmCmd);
                 steeringCmd(requestedSteerAngle,currentAngle, steeringPwmCmd);
 
@@ -261,10 +262,10 @@ private:
 
             //Autonomous Mode
             } else if (mode==1){
-                RCLCPP_INFO(this->get_logger(), "Autonomous mode");
                 //speed(40);
 
                 float cmd_RearSpeed = 40;
+                /*
                 //Calcul de l'erreur pour le gain Kp
                 speedErrorLeft = cmd_RearSpeed - currentRPM_L;
                 speedErrorRight = cmd_RearSpeed - currentRPM_R;
@@ -301,6 +302,9 @@ private:
 
                 leftRearPwmCmd = leftPwmCmd;
                 rightRearPwmCmd = rightPwmCmd;
+                */
+
+               accel_decel_stop();
             }
 
         }
