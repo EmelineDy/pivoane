@@ -78,8 +78,8 @@ private:
 
     float previousSpeedErrorLeft;
     float previousSpeedErrorRight;
-    float sumIntegralLeft;
-    float sumIntegralRight;
+    float sumIntegralLeft = 0;
+    float sumIntegralRight = 0;
     float leftPwmCmd;
     float rightPwmCmd;
     float speedErrorLeft;
@@ -200,7 +200,6 @@ private:
         else{
             leftRearPwmCmd = 50;
             rightRearPwmCmd = 50;
-            compteur = 0;
         }     
     }
     /*
@@ -262,10 +261,10 @@ private:
 
             //Autonomous Mode
             } else if (mode==1){
-                //speed(40);
+                //accel_decel_stop();
 
                 float cmd_RearSpeed = 40;
-                /*
+                
                 //Calcul de l'erreur pour le gain Kp
                 speedErrorLeft = cmd_RearSpeed - currentRPM_L;
                 speedErrorRight = cmd_RearSpeed - currentRPM_R;
@@ -275,10 +274,12 @@ private:
                 sumIntegralRight += speedErrorRight;
 
                 //Calcul de l'erreur pour le gain Kd
+                /*
                 deltaErrorLeft = speedErrorLeft - previousSpeedErrorLeft;
                 deltaErrorRight = speedErrorRight - previousSpeedErrorRight;
                 previousSpeedErrorLeft = speedErrorLeft;
                 previousSpeedErrorRight = speedErrorRight;
+                */
 
                 //Calcul de la commande à envoyer à chacun des moteurs (gauche et droite)
                 leftPwmCmd = speedErrorLeft * 1 + sumIntegralLeft * 0.01;
@@ -302,9 +303,6 @@ private:
 
                 leftRearPwmCmd = leftPwmCmd;
                 rightRearPwmCmd = rightPwmCmd;
-                */
-
-               accel_decel_stop();
             }
 
         }
