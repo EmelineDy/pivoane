@@ -214,12 +214,12 @@ private:
 
     void accel_decel_stop(){
         
-        if(compteur <= 5*TIME){
+        if(compteur <= 10*TIME){
             compteur_ramp=0;
             speed(60);
             compteur+=1;
         }
-        else if((5*TIME < compteur) && (compteur <= 10*TIME)){
+        else if((10*TIME < compteur) && (compteur <= 20*TIME)){
             compteur_ramp=0;
             speed(30);
             compteur+=1;            
