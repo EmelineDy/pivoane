@@ -22,7 +22,7 @@ class us_detection : public rclcpp::Node {
     us_detection()
     : Node("us_detection_node")
     {
-      publisher_obstacle_ = this->create_publisher<interfaces::msg::Obstacles>("obstacle", 10);
+      publisher_obstacle_ = this->create_publisher<interfaces::msg::Obstacles>("obstacles", 10);
 
       subscription_ultrasonic_sensor_ = this->create_subscription<interfaces::msg::Ultrasonic>(
         "us_data", 10, std::bind(&us_detection::usDataCallback, this, _1));
@@ -48,36 +48,40 @@ class us_detection : public rclcpp::Node {
 
       if ((ultrasonic.front_center <= 50.0)){
         if(a!=1){
-            RCLCPP_INFO(this->get_logger(), "Front obstacle near = %d cm", ultrasonic.front_center);
-            a = 1;
+          RCLCPP_INFO(this->get_logger(), "Front obstacle near = %d cm", ultrasonic.front_center);
+          a = 1;
         }
         obstacleMsg.speed_order = 0;
-      } else if((ultrasonic.front_left <= 20.0)){
+      } 
+      else if((ultrasonic.front_left <= 20.0)){
           if(a!=4){
-              RCLCPP_INFO(this->get_logger(), "Obstacle on the left = %d cm", ultrasonic.front_left);
-              a = 4;
+            RCLCPP_INFO(this->get_logger(), "Obstacle on the left = %d cm", ultrasonic.front_left);
+            a = 4;
           }
         obstacleMsg.speed_order = 0;
-      } else if((ultrasonic.front_right <= 20.0)){
-        RCLCPP_INFO(this->get_logger(), "Obstacle on the right = %d cm", ultrasonic.front_right);
-        a = 5;
+      } 
+      else if((ultrasonic.front_right <= 20.0)){
+        if (a!=5){
+          RCLCPP_INFO(this->get_logger(), "Obstacle on the right = %d cm", ultrasonic.front_right);
+          a = 5;
+        }
         obstacleMsg.speed_order = 0; 
-      } else if(ultrasonic.front_center > 50.0 && ultrasonic.front_center <= 100.0){
+      } 
+      else if(ultrasonic.front_center > 50.0 && ultrasonic.front_center <= 100.0){
         if(a!=2){
-            RCLCPP_INFO(this->get_logger(), "Front obstacle far = %d cm", ultrasonic.front_center);
-            a = 2;
+          RCLCPP_INFO(this->get_logger(), "Front obstacle far = %d cm", ultrasonic.front_center);
+          a = 2;
         }
         obstacleMsg.speed_order = 1;
-      } else{
+      } 
+      else{
         if(a!=3){
-            RCLCPP_INFO(this->get_logger(), "No obstacle");
-            a = 3;
+          RCLCPP_INFO(this->get_logger(), "No obstacle");
+          a = 3;
         }
         obstacleMsg.speed_order = 2;
       }
-
-      //RCLCPP_INFO(this->get_logger(), "Speed order = %d ", obstacleMsg.speed_order);
-      
+    
       publisher_obstacle_->publish(obstacleMsg);
     }
 };
