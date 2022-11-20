@@ -1,6 +1,8 @@
 
 
 #include "rclcpp/rclcpp.hpp"
+
+#include <chrono>
 #include <cstdio>
 
 #include "interfaces/msg/ultrasonic.hpp"
@@ -24,6 +26,8 @@ class us_detection : public rclcpp::Node {
 
       subscription_ultrasonic_sensor_ = this->create_subscription<interfaces::msg::Ultrasonic>(
         "us_data", 10, std::bind(&us_detection::usDataCallback, this, _1));
+
+      timer_ = this->create_wall_timer(PERIOD_UPDATE_CMD, std::bind(&us_detection::Object_detection, this));
     
       RCLCPP_INFO(this->get_logger(), "car_control_node READY");
     }
@@ -39,16 +43,22 @@ class us_detection : public rclcpp::Node {
     //Speed variable
     uint8_t speed_order;
 
-    rclcpp::TimerBase::SharedPtr timer_;
-
     //Publisher
     rclcpp::Publisher<interfaces::msg::Obstacles>::SharedPtr publisher_obstacle_;
 
     //Subscriber
     rclcpp::Subscription<interfaces::msg::Ultrasonic>::SharedPtr subscription_ultrasonic_sensor_;
 
+    //Timer
+    rclcpp::TimerBase::SharedPtr timer_;
+
 
   void usDataCallback(const interfaces::msg::Ultrasonic & ultrasonic){
+    LeftObstacle = ultrasonic.front_left;
+    RightObstacle = ultrasonic.front_right;
+    CenterObstacle = ultrasonic.front_center;
+
+    /*
     
     auto obstacleMsg = interfaces::msg::Obstacles();
 
@@ -81,14 +91,14 @@ class us_detection : public rclcpp::Node {
       }
       obstacleMsg.speed_order = 2;
     }
-    //Obstacles.speed_order = speed_order;
 
     RCLCPP_INFO(this->get_logger(), "Speed order = %d ", obstacleMsg.speed_order);
     
     publisher_obstacle_->publish(obstacleMsg);
+    */
   }
 
-  /*
+  
   void Object_detection() {
 
     auto Obstacles = interfaces::msg::Obstacles();
@@ -148,14 +158,11 @@ class us_detection : public rclcpp::Node {
 
     //RCLCPP_INFO(this->get_logger(), "a = %i", a);
 
-  //Obstacles.speed_order = speed_order;
+  Obstacles.speed_order = speed_order;
 
-  Obstacles.speed_order = 2;
-
-  publisher_->publish(Obstacles);
+  publisher_obstacle_->publish(Obstacles);
 
   }
-  */
 };
 
 int main(int argc, char * argv[])
