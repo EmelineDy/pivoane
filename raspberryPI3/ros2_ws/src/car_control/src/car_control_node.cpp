@@ -104,26 +104,10 @@ private:
     }
 
     void obstaclesCallback(const interfaces::msg::Obstacles & obstacles){
-        if (obstacles.speed_order != speed_order){ //if speed order change
-        speed_order = obstacles.speed_order;
+        if (obstacles.us_detect != us_detect){ //if speed order change
+        us_detect = obstacles.us_detect;
         RCLCPP_INFO(this->get_logger(), "Get data from topic speed");
         }
-    }
-
- 
-    void accel_decel_stop(){
-        
-        if(compteur <= 5*TIME){
-            //speed(60);
-            compteur+=1;
-        }
-        else if((5*TIME < compteur) && (compteur <= 10*TIME)){
-            //speed(30);
-            compteur+=1;            
-        }
-        else{
-            //speed(0);
-        }     
     }
 
    
@@ -166,7 +150,7 @@ private:
 
             //Autonomous Mode
             }else if (mode==1){                
-                adaptSpeed(speed_order, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
+                adaptSpeed(us_detect, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
             }
 
         }
@@ -247,7 +231,6 @@ private:
     float currentAngle;
     float currentRPM_R;
     float currentRPM_L;
-    float previous_currentRPM;
 
     //Manual Mode variables (with joystick control)
     bool reverse;
@@ -260,15 +243,11 @@ private:
     uint8_t steeringPwmCmd;
 
     //Obstacle variable
-    uint8_t speed_order;
+    uint8_t us_detect;
 
     //PID variables
     float sumIntegralLeft = 0;
     float sumIntegralRight = 0;
-    float leftPwmCmd ;
-    float rightPwmCmd;
-    float speedErrorLeft;
-    float speedErrorRight;
 
 
     //Publishers
