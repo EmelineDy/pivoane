@@ -114,15 +114,15 @@ private:
     void accel_decel_stop(){
         
         if(compteur <= 5*TIME){
-            speed(60);
+            //speed(60);
             compteur+=1;
         }
         else if((5*TIME < compteur) && (compteur <= 10*TIME)){
-            speed(30);
+            //speed(30);
             compteur+=1;            
         }
         else{
-            speed(0);
+            //speed(0);
         }     
     }
 
