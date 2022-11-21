@@ -7,11 +7,13 @@
 #include "interfaces/msg/motors_feedback.hpp"
 #include "interfaces/msg/steering_calibration.hpp"
 #include "interfaces/msg/joystick_order.hpp"
+#include "interfaces/msg/obstacles.hpp"
 
 #include "std_srvs/srv/empty.hpp"
 
 #include "../include/car_control/steeringCmd.h"
 #include "../include/car_control/propulsionCmd.h"
+#include "../include/car_control/speedCmd.h"
 #include "../include/car_control/car_control_node.h"
 
 using namespace std;
@@ -45,8 +47,9 @@ public:
         subscription_steering_calibration_ = this->create_subscription<interfaces::msg::SteeringCalibration>(
         "steering_calibration", 10, std::bind(&car_control::steeringCalibrationCallback, this, _1));
 
+        subscription_obstacles_ = this->create_subscription<interfaces::msg::Obstacles>(
+        "obstacles", 10, std::bind(&car_control::obstaclesCallback, this, _1));
 
-        
 
         server_calibration_ = this->create_service<std_srvs::srv::Empty>(
                             "steering_calibration", std::bind(&car_control::steeringCalibration, this, std::placeholders::_1, std::placeholders::_2));
@@ -67,27 +70,6 @@ private:
     */
 
     int compteur = 0;
-    int compteur_ramp = 0;
-    int iErrorL = 0;
-    int iErrorR = 0;
-    float deltaErrorRight;
-    float deltaErrorLeft;
-    float rpmErrorLeft;
-    float rpmErrorRight;
-    float previousrpmErrorLeft ;
-    float previousrpmErrorRight;
-    float micro_step_rpm_target;
-    float ramp_cmd_RearSpeed;
-    int n_micro_step;
-
-    float previousSpeedErrorLeft;
-    float previousSpeedErrorRight;
-    float sumIntegralLeft = 0;
-    float sumIntegralRight = 0;
-    float leftPwmCmd ;
-    float rightPwmCmd;
-    float speedErrorLeft;
-    float speedErrorRight;
 
     void joystickOrderCallback(const interfaces::msg::JoystickOrder & joyOrder) {
 
@@ -121,131 +103,28 @@ private:
         }
     }
 
-    /* added functions by team Beth*/
-
-    void speed(float cmd_RearSpeed) {
-        
-        n_micro_step = 10; 
-        
-        if (compteur_ramp==0){
-            previous_currentRPM = (currentRPM_L + currentRPM_R)/2.0;
-            micro_step_rpm_target = (cmd_RearSpeed-previous_currentRPM)/static_cast<float>(n_micro_step);
-        }
-
-        if (compteur_ramp<n_micro_step){
-            compteur_ramp++;
-        }
-
-
-        ramp_cmd_RearSpeed = previous_currentRPM + compteur_ramp * micro_step_rpm_target;
-
-        //Calcul de l'erreur pour le gain Kp
-        speedErrorLeft = ramp_cmd_RearSpeed - currentRPM_L;
-        speedErrorRight = ramp_cmd_RearSpeed - currentRPM_R;
-
-        //Calcul de l'erreur pour le gain Ki
-        sumIntegralLeft += speedErrorLeft;
-        sumIntegralRight += speedErrorRight;
-
-        //Calcul de l'erreur pour le gain Kd
-        /*
-        deltaErrorLeft = speedErrorLeft - previousSpeedErrorLeft;
-        deltaErrorRight = speedErrorRight - previousSpeedErrorRight;
-        previousSpeedErrorLeft = speedErrorLeft;
-        previousSpeedErrorRight = speedErrorRight;
-        */
-
-        //Calcul de la commande à envoyer à chacun des moteurs (gauche et droite)
-        leftPwmCmd = speedErrorLeft * 1 + sumIntegralLeft * 0.01;
-        rightPwmCmd = speedErrorRight * 1 + sumIntegralRight * 0.01;
-
-        //Pour éviter de casser le moteur,
-        // on évite de le retour en arrière du moteur en empêchant une commande < 50
-        if(leftPwmCmd < 0)
-            leftPwmCmd = 0;
-        else if(leftPwmCmd > 50)
-            leftPwmCmd = 50;
-
-        if(rightPwmCmd < 0)
-            rightPwmCmd = 0;
-        else if(rightPwmCmd > 50)
-            rightPwmCmd = 50;
-
-        leftPwmCmd += 50;
-        rightPwmCmd += 50;
-
-
-        leftRearPwmCmd = leftPwmCmd;
-        rightRearPwmCmd = rightPwmCmd;
-
-
-    }
-
-
-    void go_forward(int speed_goal){
-        if(compteur<=2*TIME){
-            leftRearPwmCmd = speed_goal;
-            rightRearPwmCmd = speed_goal;
-            steeringPwmCmd = 50;
-            compteur+=1;
-        }
-        else{
-            leftRearPwmCmd = STOP;
-            rightRearPwmCmd = STOP;
-            steeringPwmCmd = 50;
-            compteur = 0;
+    void obstaclesCallback(const interfaces::msg::Obstacles & obstacles){
+        if (obstacles.speed_order != speed_order){ //if speed order change
+        speed_order = obstacles.speed_order;
+        RCLCPP_INFO(this->get_logger(), "Get data from topic speed");
         }
     }
 
-    void go_backward(){
-        if(compteur<=10*TIME){
-            leftRearPwmCmd = 25;
-            rightRearPwmCmd = 25;
-            steeringPwmCmd = 50;
-            compteur+=1;
-        }
-        else{
-            leftRearPwmCmd = STOP;
-            rightRearPwmCmd = STOP;
-            steeringPwmCmd = 50;
-            compteur = 0;
-        }  
-    }
-
+ 
     void accel_decel_stop(){
         
         if(compteur <= 5*TIME){
-            compteur_ramp=0;
             speed(60);
             compteur+=1;
         }
         else if((5*TIME < compteur) && (compteur <= 10*TIME)){
-            compteur_ramp=0;
             speed(30);
             compteur+=1;            
         }
         else{
-            compteur_ramp=0;
             speed(0);
         }     
     }
-    /*
-    void straight_Traj(float RPM_R, float RPM_L, float rpm_target) {
-        int pwm_max = 100;
-        float rpm_max_l = 62.169998;
-        float rpm_max_r = 61.27;
-
-            float error_l = rpm_target - RPM_L;
-            float error_r = rpm_target - RPM_R;
-
-            float correction_l = ((error_l / rpm_max_l) /2) * float(pwm_max)*0.3;
-            float correction_r = ((error_r / rpm_max_r) /2) * float(pwm_max)*0.3;
-
-            leftRearPwmCmd = uint8_t(min(float(100), max(float(50), float(leftRearPwmCmd)+correction_l)));
-            rightRearPwmCmd = uint8_t(min(float(100), max(float(50), float(rightRearPwmCmd)+correction_r)));
-            steeringPwmCmd = 50;
-    }  
-    */
 
    
     /* Update currentAngle from motors feedback [callback function]  :
@@ -258,7 +137,6 @@ private:
         currentRPM_R = motorsFeedback.right_rear_speed;
         currentRPM_L = motorsFeedback.left_rear_speed;
     }
-
 
     /* Update PWM commands : leftRearPwmCmd, rightRearPwmCmd, steeringPwmCmd
     *
@@ -287,15 +165,12 @@ private:
                 compteur = 0;
 
             //Autonomous Mode
-            } else if (mode==1){
-
-                accel_decel_stop();
-
+            }else if (mode==1){                
+                adaptSpeed(speed_order, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
             }
 
         }
         
-
         //Send order to motors
         motorsOrder.left_rear_pwm = leftRearPwmCmd;
         motorsOrder.right_rear_pwm = rightRearPwmCmd;
@@ -384,6 +259,18 @@ private:
     uint8_t rightRearPwmCmd;
     uint8_t steeringPwmCmd;
 
+    //Obstacle variable
+    uint8_t speed_order;
+
+    //PID variables
+    float sumIntegralLeft = 0;
+    float sumIntegralRight = 0;
+    float leftPwmCmd ;
+    float rightPwmCmd;
+    float speedErrorLeft;
+    float speedErrorRight;
+
+
     //Publishers
     rclcpp::Publisher<interfaces::msg::MotorsOrder>::SharedPtr publisher_can_;
     rclcpp::Publisher<interfaces::msg::SteeringCalibration>::SharedPtr publisher_steeringCalibration_;
@@ -392,6 +279,7 @@ private:
     rclcpp::Subscription<interfaces::msg::JoystickOrder>::SharedPtr subscription_joystick_order_;
     rclcpp::Subscription<interfaces::msg::MotorsFeedback>::SharedPtr subscription_motors_feedback_;
     rclcpp::Subscription<interfaces::msg::SteeringCalibration>::SharedPtr subscription_steering_calibration_;
+    rclcpp::Subscription<interfaces::msg::Obstacles>::SharedPtr subscription_obstacles_;
 
     //Timer
     rclcpp::TimerBase::SharedPtr timer_;
