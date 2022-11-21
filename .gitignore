@@ -35,3 +35,4 @@ build/
 log/
 install/
 .vscode/
+workspace.code-workspace

@@ -70,20 +70,6 @@ private:
     */
 
     int compteur = 0;
-    
-    /* si amélioration du PID : variables pour le Kd*/
-
-    //float deltaErrorRight;
-    //float deltaErrorLeft;
-    //float previousSpeedErrorLeft;
-    //float previousSpeedErrorRight;
-
-    /* Variables rampes
-    int compteur_ramp = 0;
-    float micro_step_rpm_target;
-    float ramp_cmd_RearSpeed;
-    int n_micro_step;
-    */
 
     void joystickOrderCallback(const interfaces::msg::JoystickOrder & joyOrder) {
 
@@ -124,66 +110,23 @@ private:
         }
     }
 
-    /* added functions by team Beth*/
-
-    void speed(float cmd_RearSpeed) {
-        
-       /* n_micro_step = 10; 
-        
-        if (compteur_ramp==0){
-            previous_currentRPM = (currentRPM_L + currentRPM_R)/2.0;
-            micro_step_rpm_target = (cmd_RearSpeed-previous_currentRPM)/static_cast<float>(n_micro_step);
-        }
-
-        if (compteur_ramp<n_micro_step){
-            compteur_ramp++;
-        }
-        ramp_cmd_RearSpeed = previous_currentRPM + compteur_ramp * micro_step_rpm_target;*/
-
-        //Calcul de l'erreur pour le gain Kp
-        speedErrorLeft = cmd_RearSpeed - currentRPM_L;
-        speedErrorRight = cmd_RearSpeed - currentRPM_R;
-
-        //Calcul de l'erreur pour le gain Ki
-        sumIntegralLeft += speedErrorLeft;
-        sumIntegralRight += speedErrorRight;
-
-        //Calcul de l'erreur pour le gain Kd
-        /*
-        deltaErrorLeft = speedErrorLeft - previousSpeedErrorLeft;
-        deltaErrorRight = speedErrorRight - previousSpeedErrorRight;
-        previousSpeedErrorLeft = speedErrorLeft;
-        previousSpeedErrorRight = speedErrorRight;
-        */
-
-        //Calcul de la commande à envoyer à chacun des moteurs (gauche et droite)
-        leftPwmCmd = min( max(0.0, (speedErrorLeft * 1 + sumIntegralLeft * 0.01)), 50.0);
-        rightPwmCmd = min( max(0.0, (speedErrorRight * 1 + sumIntegralRight * 0.01)), 50.0);
-        leftPwmCmd += 50;
-        rightPwmCmd += 50;
-
-        leftRearPwmCmd = leftPwmCmd;
-        rightRearPwmCmd = rightPwmCmd;
-    }
-
+ 
     void accel_decel_stop(){
         
         if(compteur <= 5*TIME){
-            //compteur_ramp=0;
             speed(60);
             compteur+=1;
         }
         else if((5*TIME < compteur) && (compteur <= 10*TIME)){
-            //compteur_ramp=0;
             speed(30);
             compteur+=1;            
         }
         else{
-            //compteur_ramp=0;
             speed(0);
         }     
     }
 
+   
     /* Update currentAngle from motors feedback [callback function]  :
     *
     * This function is called when a message is published on the "/motors_feedback" topic
@@ -216,39 +159,25 @@ private:
 
             //Manual Mode
             if (mode==0){
-                
                 manualPropulsionCmd(requestedThrottle, reverse, leftRearPwmCmd,rightRearPwmCmd);
                 steeringCmd(requestedSteerAngle,currentAngle, steeringPwmCmd);
 
                 compteur = 0;
 
             //Autonomous Mode
-            }else if (mode==1){
-
-                /*
-                
-                if ((speed_order == 0)){
-                    speed(0.0);
-               }
-                else if((speed_order == 1)){
-                    speed(30.0);
-                }
-                else if((speed_order == 2)){
-                    speed(60.0); 
-                }
-
-                */
-                
+            }else if (mode==1){                
                 adaptSpeed(speed_order, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
             }
-        }
 
+        }
+        
         //Send order to motors
         motorsOrder.left_rear_pwm = leftRearPwmCmd;
         motorsOrder.right_rear_pwm = rightRearPwmCmd;
         motorsOrder.steering_pwm = steeringPwmCmd;
 
         publisher_can_->publish(motorsOrder);
+
     }
 
 
