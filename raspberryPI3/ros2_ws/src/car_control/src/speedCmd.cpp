@@ -4,14 +4,12 @@
 
 using namespace std;
 
-float sumIntegralLeft = 0;
-float sumIntegralRight = 0;
 float leftPwmCmd ;
 float rightPwmCmd;
 float speedErrorLeft;
 float speedErrorRight;
 
-void calculateSpeed(float cmd_RearSpeed, uint8_t& leftRearPwmCmd, uint8_t& rightRearPwmCmd, float currentRPM_L, float currentRPM_R){
+void calculateSpeed(float cmd_RearSpeed, uint8_t& leftRearPwmCmd, uint8_t& rightRearPwmCmd, float currentRPM_L, float currentRPM_R, float& sumIntegralLeft, float& sumIntegralRight){
     
     //Calcul de l'erreur pour le gain Kp
     speedErrorLeft = cmd_RearSpeed - currentRPM_L;
@@ -40,14 +38,14 @@ void calculateSpeed(float cmd_RearSpeed, uint8_t& leftRearPwmCmd, uint8_t& right
     rightRearPwmCmd = rightPwmCmd;
 }
 
-void adaptSpeed(uint8_t speedRequest, uint8_t& leftRearPwmCmd, uint8_t& rightRearPwmCmd, float currentRPM_L, float currentRPM_R){
+void adaptSpeed(uint8_t speedRequest, uint8_t& leftRearPwmCmd, uint8_t& rightRearPwmCmd, float currentRPM_L, float currentRPM_R, float& sumIntegralLeft, float& sumIntegralRight){
     if ((speedRequest == 0)){
-        calculateSpeed(0.0, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R);
+        calculateSpeed(0.0, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
     }
     else if((speedRequest == 1)){
-        calculateSpeed(30.0, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R);
+        calculateSpeed(30.0, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
     }
     else if((speedRequest == 2)){
-        calculateSpeed(60.0, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R); 
+        calculateSpeed(60.0, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight); 
     }
 }

@@ -224,6 +224,8 @@ private:
 
             //Autonomous Mode
             }else if (mode==1){
+
+                /*
                 
                 if ((speed_order == 0)){
                     speed(0.0);
@@ -234,11 +236,12 @@ private:
                 else if((speed_order == 2)){
                     speed(60.0); 
                 }
+
+                */
                 
-                //adaptSpeed(speed_order, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R);
+                adaptSpeed(speed_order, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
             }
         }
-
 
         //Send order to motors
         motorsOrder.left_rear_pwm = leftRearPwmCmd;
