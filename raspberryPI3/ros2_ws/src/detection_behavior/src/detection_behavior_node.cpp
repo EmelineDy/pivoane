@@ -78,7 +78,7 @@ class detection_behavior : public rclcpp::Node {
       }
     
       publisher_required_speed_->publish(speedMsg);
-      last_ai = ai_detect;
+      //last_ai = ai_detect;
       
     }
 };
