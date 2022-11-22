@@ -27,7 +27,7 @@ class us_detection : public rclcpp::Node {
       subscription_ultrasonic_sensor_ = this->create_subscription<interfaces::msg::Ultrasonic>(
         "us_data", 10, std::bind(&us_detection::usDataCallback, this, _1));
     
-      RCLCPP_INFO(this->get_logger(), "car_control_node READY");
+      RCLCPP_INFO(this->get_logger(), "us_detection_node READY");
     }
 
   private:
