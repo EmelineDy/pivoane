@@ -51,21 +51,21 @@ class us_detection : public rclcpp::Node {
           RCLCPP_INFO(this->get_logger(), "Front obstacle near = %d cm", ultrasonic.front_center);
           a = 1;
         }
-        obstacleMsg.us_detect = 0;
+        obstacleMsg.us_detect = 2;
       } 
       else if((ultrasonic.front_left <= 20.0)){
           if(a!=4){
             RCLCPP_INFO(this->get_logger(), "Obstacle on the left = %d cm", ultrasonic.front_left);
             a = 4;
           }
-        obstacleMsg.us_detect = 0;
+        obstacleMsg.us_detect = 2;
       } 
       else if((ultrasonic.front_right <= 20.0)){
         if (a!=5){
           RCLCPP_INFO(this->get_logger(), "Obstacle on the right = %d cm", ultrasonic.front_right);
           a = 5;
         }
-        obstacleMsg.us_detect = 0; 
+        obstacleMsg.us_detect = 2; 
       } 
       else if(ultrasonic.front_center > 50.0 && ultrasonic.front_center <= 100.0){
         if(a!=2){
@@ -79,7 +79,7 @@ class us_detection : public rclcpp::Node {
           RCLCPP_INFO(this->get_logger(), "No obstacle");
           a = 3;
         }
-        obstacleMsg.us_detect = 2;
+        obstacleMsg.us_detect = 0;
       }
     
       publisher_obstacle_->publish(obstacleMsg);

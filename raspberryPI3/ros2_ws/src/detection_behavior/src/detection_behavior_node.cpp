@@ -39,6 +39,9 @@ class detection_behavior : public rclcpp::Node {
     uint8_t lidar_detect;
     uint8_t ai_detect;
 
+    int work_sign = 0;
+    int last_speed = 60;
+
     //Publisher
     rclcpp::Publisher<interfaces::msg::RequiredSpeed>::SharedPtr publisher_required_speed_;
 
@@ -53,15 +56,30 @@ class detection_behavior : public rclcpp::Node {
       lidar_detect = obstacles.lidar_detect;
       ai_detect = obstacles.ai_detect;
 
-      if(us_detect == 2 || lidar_detect == 2){
+      if(us_detect == 2 || lidar_detect == 2){ //Si le Lidar ou les capteurs US détectent un piéton proche
+        last_speed = speedMsg.speed_rpm;
         speedMsg.speed_rpm = 0;
-      }else if(us_detect == 1 || lidar_detect == 1){
+      }else if(us_detect == 1 || lidar_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton loin
+        last_speed = speedMsg.speed_rpm;
         speedMsg.speed_rpm = 30;
-      }else{
+      } else if (ai_detect == 4 && work_sign == 0) { //Si détection de panneau vitesse basse, et pas de panneau de travaux détecté avant
+         speedMsg.speed_rpm = 30;
+      } else if (ai_detect == 5) { //Si détection de panneau travaux
+         last_speed = speedMsg.speed_rpm;
+         speedMsg.speed_rpm = 20;
+         work_sign = 1;
+      } else if (ai_detect == 6) { //Si détection de panneau fin de limitation
+         speedMsg.speed_rpm = last_speed;
+         work_sign = 0;
+      }else if (ai_detect == 7 && work_sign == 0) { //Si détection de panneau vitesse haute, et pas de panneau de travaux détecté avant
+         speedMsg.speed_rpm = 60;
+      } else{ //Si rien n'est détecté (situation de départ)
         speedMsg.speed_rpm = 60;
       }
     
       publisher_required_speed_->publish(speedMsg);
+      last_ai = ai_detect;
+      
     }
 };
 
