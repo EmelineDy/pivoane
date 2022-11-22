@@ -7,7 +7,7 @@
 #include "interfaces/msg/motors_feedback.hpp"
 #include "interfaces/msg/steering_calibration.hpp"
 #include "interfaces/msg/joystick_order.hpp"
-#include "interfaces/msg/obstacles.hpp"
+#include "interfaces/msg/required_speed.hpp"
 
 #include "std_srvs/srv/empty.hpp"
 
@@ -47,8 +47,8 @@ public:
         subscription_steering_calibration_ = this->create_subscription<interfaces::msg::SteeringCalibration>(
         "steering_calibration", 10, std::bind(&car_control::steeringCalibrationCallback, this, _1));
 
-        subscription_obstacles_ = this->create_subscription<interfaces::msg::Obstacles>(
-        "obstacles", 10, std::bind(&car_control::obstaclesCallback, this, _1));
+        subscription_required_speed_ = this->create_subscription<interfaces::msg::RequiredSpeed>(
+        "required_speed", 10, std::bind(&car_control::reqspeedCallback, this, _1));
 
 
         server_calibration_ = this->create_service<std_srvs::srv::Empty>(
@@ -103,9 +103,9 @@ private:
         }
     }
 
-    void obstaclesCallback(const interfaces::msg::Obstacles & obstacles){
-        if (obstacles.us_detect != us_detect){ //if speed order change
-        us_detect = obstacles.us_detect;
+    void reqspeedCallback(const interfaces::msg::RequiredSpeed & required_speed){
+        if (required_speed.speed_rpm != speed_rpm){ //if speed order change
+        speed_rpm = required_speed.speed_rpm;
         RCLCPP_INFO(this->get_logger(), "Get data from topic speed");
         }
     }
@@ -150,7 +150,8 @@ private:
 
             //Autonomous Mode
             }else if (mode==1){                
-                adaptSpeed(us_detect, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
+                //adaptSpeed(us_detect, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
+                calculateSpeed(speed_rpm, leftRearPwmCmd, rightRearPwmCmd,currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
             }
 
         }
@@ -243,7 +244,7 @@ private:
     uint8_t steeringPwmCmd;
 
     //Obstacle variable
-    uint8_t us_detect;
+    uint8_t speed_rpm;
 
     //PID variables
     float sumIntegralLeft = 0;
@@ -258,7 +259,7 @@ private:
     rclcpp::Subscription<interfaces::msg::JoystickOrder>::SharedPtr subscription_joystick_order_;
     rclcpp::Subscription<interfaces::msg::MotorsFeedback>::SharedPtr subscription_motors_feedback_;
     rclcpp::Subscription<interfaces::msg::SteeringCalibration>::SharedPtr subscription_steering_calibration_;
-    rclcpp::Subscription<interfaces::msg::Obstacles>::SharedPtr subscription_obstacles_;
+    rclcpp::Subscription<interfaces::msg::RequiredSpeed>::SharedPtr subscription_required_speed_;
 
     //Timer
     rclcpp::TimerBase::SharedPtr timer_;

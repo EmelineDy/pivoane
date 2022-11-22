@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(interfaces)
+project(detection_behavior)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -8,28 +8,20 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(builtin_interfaces REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
+find_package(interfaces REQUIRED)
 
-set(msg_files
-  "msg/JoystickOrder.msg"
-  "msg/MotorsOrder.msg"
-  "msg/MotorsFeedback.msg"
-  "msg/GeneralData.msg"
-  "msg/SteeringCalibration.msg"
-  "msg/Ultrasonic.msg"
-  "msg/Gnss.msg"
-  "msg/SystemCheck.msg"
-  "msg/Obstacles.msg"
-  "msg/RequiredSpeed.msg"
-)
+add_executable(detection_behavior_node src/detection_behavior_node.cpp)
 
-rosidl_generate_interfaces(${PROJECT_NAME}
-  ${msg_files}
-)
+ament_target_dependencies(detection_behavior_node rclcpp interfaces)
+ament_export_include_directories(include)
 
-ament_export_dependencies(rosidl_default_runtime)
+target_include_directories(detection_behavior_node PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+target_compile_features(detection_behavior_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+
+install(TARGETS detection_behavior_node
+  DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
