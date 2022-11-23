@@ -33,7 +33,7 @@ class detection_behavior : public rclcpp::Node {
   private:
 
     //Speed variable
-    uint8_t us_detect;
+    uint8_t us_detect = 5;
     uint8_t lidar_detect;
     uint8_t ai_detect;
 
@@ -53,52 +53,54 @@ class detection_behavior : public rclcpp::Node {
       
       auto speedMsg = interfaces::msg::RequiredSpeed();
 
-      us_detect = obstacles.us_detect;
-      lidar_detect = obstacles.lidar_detect;
-      ai_detect = obstacles.ai_detect;
+      if (us_detect != obstacles.us_detect || lidar_detect != obstacles.lidar_detect || ai_detect != obstacles.ai_detect) {
+        us_detect = obstacles.us_detect;
+        lidar_detect = obstacles.lidar_detect;
+        ai_detect = obstacles.ai_detect;
 
-      if(us_detect == 2 || lidar_detect == 2){ //Si le Lidar ou les capteurs US détectent un piéton proche
-        speed_before_obs = speedMsg.speed_rpm;        
-        speedMsg.speed_rpm = 0;
-      }else if(us_detect == 1 || lidar_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton loin
-        slow_walk = speedMsg.speed_rpm;
-        speedMsg.speed_rpm = 30;
-      } else if(ai_detect == 1){ //Si panneau stop
-        speed_before_stop = speedMsg.speed_rpm;
-        speedMsg.speed_rpm = 0;
-      } else if(ai_detect == 2){ //Si panneau cédez-le-passage
-        last_speed = speedMsg.speed_rpm;
-        speedMsg.speed_rpm = 15;
-      } else if(ai_detect == 3){ //Si panneau dos d'âne
-        last_speed = speedMsg.speed_rpm;
-        speedMsg.speed_rpm = 30;
-      } else if (ai_detect == 4 ) { //Si détection de panneau vitesse basse, et pas de panneau de travaux détecté avant
-         last_speed = speedMsg.speed_rpm;
-         speedMsg.speed_rpm = 36;
-      } else if (ai_detect == 6) { //Si détection de panneau fin de limitation
-         speedMsg.speed_rpm = last_speed;
-         last_speed = 0;
-      }else if (ai_detect == 7) { //Si détection de panneau vitesse haute, et pas de panneau de travaux détecté avant
-         last_speed = 0;
-         speedMsg.speed_rpm = 60;
-      } else if (ai_detect == 0 && lidar_detect == 0 && us_detect == 0){ //Si rien n'est détecté (situation de départ)
-        if(slow_walk !=0){
-          speedMsg.speed_rpm = slow_walk;
-          speed_before_obs = 0;
-          slow_walk = 0;
-        } else if(speed_before_obs !=0){
-          speedMsg.speed_rpm = speed_before_obs;
-          speed_before_obs = 0;
-        } else if(speed_before_stop !=0) {
-          speedMsg.speed_rpm = speed_before_stop;
-          speed_before_stop = 0;
-        } else if (begin == 0) {
+        if(us_detect == 2 || lidar_detect == 2){ //Si le Lidar ou les capteurs US détectent un piéton proche
+          speed_before_obs = speedMsg.speed_rpm;        
+          speedMsg.speed_rpm = 0;
+        }else if(us_detect == 1 || lidar_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton loin
+          slow_walk = speedMsg.speed_rpm;
+          speedMsg.speed_rpm = 30;
+        } else if(ai_detect == 1){ //Si panneau stop
+          speed_before_stop = speedMsg.speed_rpm;
+          speedMsg.speed_rpm = 0;
+        } else if(ai_detect == 2){ //Si panneau cédez-le-passage
+          last_speed = speedMsg.speed_rpm;
+          speedMsg.speed_rpm = 15;
+        } else if(ai_detect == 3){ //Si panneau dos d'âne
+          last_speed = speedMsg.speed_rpm;
+          speedMsg.speed_rpm = 30;
+        } else if (ai_detect == 4 ) { //Si détection de panneau vitesse basse, et pas de panneau de travaux détecté avant
+          last_speed = speedMsg.speed_rpm;
+          speedMsg.speed_rpm = 36;
+        } else if (ai_detect == 6) { //Si détection de panneau fin de limitation
+          speedMsg.speed_rpm = last_speed;
+          last_speed = 0;
+        }else if (ai_detect == 7) { //Si détection de panneau vitesse haute, et pas de panneau de travaux détecté avant
+          last_speed = 0;
           speedMsg.speed_rpm = 60;
-          begin += 1;
+        } else if (ai_detect == 0 && lidar_detect == 0 && us_detect == 0){ //Si rien n'est détecté (situation de départ)
+          if(slow_walk !=0){
+            speedMsg.speed_rpm = slow_walk;
+            speed_before_obs = 0;
+            slow_walk = 0;
+          } else if(speed_before_obs !=0){
+            speedMsg.speed_rpm = speed_before_obs;
+            speed_before_obs = 0;
+          } else if(speed_before_stop !=0) {
+            speedMsg.speed_rpm = speed_before_stop;
+            speed_before_stop = 0;
+          } else if (begin == 0) {
+            speedMsg.speed_rpm = 60;
+            begin += 1;
+          }
         }
-      }
-    
-      publisher_required_speed_->publish(speedMsg);      
+      
+        publisher_required_speed_->publish(speedMsg);  
+      }    
     }
 };
 
