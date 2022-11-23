@@ -1,1 +1,1 @@
-int8 speed_rpm 0
+int8 speed_rpm 60
