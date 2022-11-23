@@ -41,6 +41,7 @@ class detection_behavior : public rclcpp::Node {
     int speed_before_obs = 0;
     int speed_before_stop = 0;
     int slow_walk = 0;
+    int begin = 0;
 
     //Publisher
     rclcpp::Publisher<interfaces::msg::RequiredSpeed>::SharedPtr publisher_required_speed_;
@@ -91,6 +92,9 @@ class detection_behavior : public rclcpp::Node {
         } else if(speed_before_stop !=0) {
           speedMsg.speed_rpm = speed_before_stop;
           speed_before_stop = 0;
+        } else if (begin == 0) {
+          speedMsg.speed_rpm = 60;
+          begin += 1;
         }
       }
     
