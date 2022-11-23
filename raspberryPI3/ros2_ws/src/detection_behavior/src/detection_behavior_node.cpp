@@ -30,8 +30,6 @@ class detection_behavior : public rclcpp::Node {
       RCLCPP_INFO(this->get_logger(), "detection behavior READY");
     }
 
-/*CODE A CHANGER*/
-
   private:
 
     //Speed variable
@@ -73,13 +71,11 @@ class detection_behavior : public rclcpp::Node {
          work_sign = 0;
       }else if (ai_detect == 7 && work_sign == 0) { //Si détection de panneau vitesse haute, et pas de panneau de travaux détecté avant
          speedMsg.speed_rpm = 60;
-      } else{ //Si rien n'est détecté (situation de départ)
+      } else if (ai_detect == 0 && lidar_detect == 0 && us_detect == 0 && work_sign == 0){ //Si rien n'est détecté (situation de départ)
         speedMsg.speed_rpm = 60;
       }
     
-      publisher_required_speed_->publish(speedMsg);
-      //last_ai = ai_detect;
-      
+      publisher_required_speed_->publish(speedMsg);      
     }
 };
 
