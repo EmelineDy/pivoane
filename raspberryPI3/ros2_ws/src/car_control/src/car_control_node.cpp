@@ -244,7 +244,7 @@ private:
     uint8_t steeringPwmCmd;
 
     //Obstacle variable
-    uint8_t speed_rpm;
+    uint8_t speed_rpm = 60;
 
     //PID variables
     float sumIntegralLeft = 0;

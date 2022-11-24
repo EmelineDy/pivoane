@@ -33,15 +33,14 @@ class detection_behavior : public rclcpp::Node {
   private:
 
     //Speed variable
-    uint8_t us_detect = 5;
-    uint8_t lidar_detect;
-    uint8_t ai_detect;
+    uint8_t us_detect = 0;
+    uint8_t lidar_detect = 0;
+    uint8_t ai_detect = 0;
 
     int last_speed = 60;
     int speed_before_obs = 0;
     int speed_before_stop = 0;
     int slow_walk = 0;
-    int begin = 0;
     int current_speed = 60;
 
     //Publisher
@@ -60,7 +59,7 @@ class detection_behavior : public rclcpp::Node {
         ai_detect = obstacles.ai_detect;
 
         if(us_detect == 2 || lidar_detect == 2){ //Si le Lidar ou les capteurs US détectent un piéton proche
-          //speed_before_obs = speedMsg.speed_rpm;        
+          slow_walk = speedMsg.speed_rpm;        
           speedMsg.speed_rpm = 0;
         }else if(us_detect == 1 || lidar_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton loin
           speed_before_obs = current_speed;
@@ -74,7 +73,7 @@ class detection_behavior : public rclcpp::Node {
         } else if(ai_detect == 3){ //Si panneau dos d'âne
           last_speed = current_speed;
           speedMsg.speed_rpm = 30;
-        } else if (ai_detect == 4 ) { //Si détection de panneau vitesse basse, et pas de panneau de travaux détecté avant
+        } else if (ai_detect == 4) { //Si détection de panneau vitesse basse, et pas de panneau de travaux détecté avant
           last_speed = current_speed;
           speedMsg.speed_rpm = 36;
         } else if (ai_detect == 6) { //Si détection de panneau fin de limitation
@@ -87,18 +86,19 @@ class detection_behavior : public rclcpp::Node {
           if(speed_before_obs !=0){
             speedMsg.speed_rpm = speed_before_obs;
             speed_before_obs = 0;
+            slow_walk = 0;
+          } else if(slow_walk !=0){
+            speedMsg.speed_rpm = slow_walk;
+            slow_walk = 0;
           } else if(speed_before_stop !=0) {
             speedMsg.speed_rpm = speed_before_stop;
             speed_before_stop = 0;
-          } else if (begin == 0) {
-            speedMsg.speed_rpm = 60;
-            begin += 1;
           }
         }
-      
-        current_speed = speedMsg.speed_rpm;
-        publisher_required_speed_->publish(speedMsg);  
-      }    
+        current_speed = speedMsg.speed_rpm; 
+        publisher_required_speed_->publish(speedMsg); 
+      }  
+
     }
 };
 
