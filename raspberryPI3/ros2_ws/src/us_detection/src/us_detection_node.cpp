@@ -34,7 +34,7 @@ class us_detection : public rclcpp::Node {
     int a = 0;
 
     //Speed variable
-    uint8_t us_detect;
+    uint8_t last_us_detect = 0;
 
     //Publisher
     rclcpp::Publisher<interfaces::msg::Obstacles>::SharedPtr publisher_obstacle_;
@@ -81,8 +81,11 @@ class us_detection : public rclcpp::Node {
         }
         obstacleMsg.us_detect = 0;
       }
-    
-      publisher_obstacle_->publish(obstacleMsg);
+
+      if (last_us_detect != obstacleMsg.us_detect) {   
+        last_us_detect = obstacleMsg.us_detect; 
+        publisher_obstacle_->publish(obstacleMsg);
+       }
     }
 };
 
