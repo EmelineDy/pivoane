@@ -82,7 +82,7 @@ class detection_behavior : public rclcpp::Node {
         }else if (ai_detect == 7) { //Si détection de panneau vitesse haute, et pas de panneau de travaux détecté avant
           last_speed = 0;
           speedMsg.speed_rpm = 60;
-        } else if (ai_detect == 8 && lidar_detect == 0 && us_detect == 0){ //Si rien n'est détecté (situation de départ)
+        } else if (ai_detect == 0 && lidar_detect == 0 && us_detect == 0){ //Si rien n'est détecté (situation de départ)
           if(speed_before_obs !=0){
             speedMsg.speed_rpm = speed_before_obs;
             speed_before_obs = 0;
@@ -92,7 +92,7 @@ class detection_behavior : public rclcpp::Node {
             slow_walk = 0;
           } else if(speed_before_stop !=0) {
             speedMsg.speed_rpm = speed_before_stop;
-            speed_before_stop = 0;
+            //speed_before_stop = 0;
           }
         }
         current_speed = speedMsg.speed_rpm; 
