@@ -28,6 +28,9 @@ class detection_behavior : public rclcpp::Node {
         "obstacles", 10, std::bind(&detection_behavior::obsDataCallback, this, _1));
     
       RCLCPP_INFO(this->get_logger(), "detection behavior READY");
+
+      timer_ = this->create_wall_timer(PERIOD_UPDATE_CMD, std::bind(&detection_behavior::updateSpeed, this));
+
     }
 
   private:
@@ -40,8 +43,9 @@ class detection_behavior : public rclcpp::Node {
     int last_speed = 60;
     int speed_before_obs = 0;
     int speed_before_stop = 0;
-    int slow_walk = 0;
     int current_speed = 60;
+
+    int counter = 0;
 
     //Publisher
     rclcpp::Publisher<interfaces::msg::RequiredSpeed>::SharedPtr publisher_required_speed_;
@@ -49,30 +53,35 @@ class detection_behavior : public rclcpp::Node {
     //Subscriber
     rclcpp::Subscription<interfaces::msg::Obstacles>::SharedPtr subscription_obstacles_;
 
-    void obsDataCallback(const interfaces::msg::Obstacles & obstacles){
-      
+    //Timer
+    rclcpp::TimerBase::SharedPtr timer_;
+
+
+    void updateSpeed(){
+
       auto speedMsg = interfaces::msg::RequiredSpeed();
 
-      if (us_detect != obstacles.us_detect || lidar_detect != obstacles.lidar_detect || ai_detect != obstacles.ai_detect) {
-        us_detect = obstacles.us_detect;
-        lidar_detect = obstacles.lidar_detect;
-        ai_detect = obstacles.ai_detect;
-
-        if(us_detect == 2 || lidar_detect == 2){ //Si le Lidar ou les capteurs US détectent un piéton proche
-          slow_walk = current_speed;        
-          current_speed = 0;
-        }else if(us_detect == 1 || lidar_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton loin
+      if(us_detect == 1 || lidar_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton à 50cm
           speed_before_obs = current_speed;
-          current_speed = 30;
+          current_speed = 0;
         } else if(ai_detect == 1){ //Si panneau stop
           speed_before_stop = current_speed;
-          current_speed = 0;
+          if(counter!=2000){  //être à l'arrêt pendant 2s
+            current_speed = 0;
+            counter ++;
+          }
         } else if(ai_detect == 2){ //Si panneau cédez-le-passage
           last_speed = current_speed;
-          current_speed = 15;
+          if(counter!=2000){  //ralentir pendant 2s
+            current_speed = 15;
+            counter ++;
+          }
         } else if(ai_detect == 3){ //Si panneau dos d'âne
           last_speed = current_speed;
-         current_speed = 30;
+          if(counter!=2000){  //ralentir pendant 2s
+            current_speed = 30;
+            counter ++;
+          }
         } else if (ai_detect == 4) { //Si détection de panneau vitesse basse, et pas de panneau de travaux détecté avant
           last_speed = current_speed;
           current_speed = 36;
@@ -86,19 +95,22 @@ class detection_behavior : public rclcpp::Node {
           if(speed_before_obs != 0){
             current_speed = speed_before_obs;
             speed_before_obs = 0;
-            slow_walk = 0;
-          } else if(slow_walk != 0){
-            current_speed = slow_walk;
-            slow_walk = 0;
           } else if(speed_before_stop != 0) {
             current_speed = speed_before_stop;
             speed_before_stop = 0;
           }
-        }
+        }   
         speedMsg.speed_rpm = current_speed; 
-        publisher_required_speed_->publish(speedMsg); 
-      }  
+        publisher_required_speed_->publish(speedMsg);
+    }
 
+    void obsDataCallback(const interfaces::msg::Obstacles & obstacles){
+
+      if (us_detect != obstacles.us_detect || lidar_detect != obstacles.lidar_detect || ai_detect != obstacles.ai_detect) {
+        us_detect = obstacles.us_detect;
+        lidar_detect = obstacles.lidar_detect;
+        ai_detect = obstacles.ai_detect; 
+      }  
     }
 };
 
