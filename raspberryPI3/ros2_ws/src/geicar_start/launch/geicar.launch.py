@@ -42,6 +42,12 @@ def generate_launch_description():
         emulate_tty=True
     )
 
+    detection_behavior_node = Node(
+        package="detection_behavior",
+        executable="detection_behavior_node",
+        emulate_tty=True
+    )
+
 
     config_dir = os.path.join(get_package_share_directory('imu_filter_madgwick'), 'config')
 
@@ -67,6 +73,7 @@ def generate_launch_description():
     ld.add_action(car_control_node)
     ld.add_action(imu_filter_madgwick_node)
     ld.add_action(us_detection_node)
+    ld.add_action(detection_behavior_node)
     ld.add_action(system_check_node)
 
     return ld

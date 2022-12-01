@@ -37,15 +37,3 @@ void calculateSpeed(float cmd_RearSpeed, uint8_t& leftRearPwmCmd, uint8_t& right
     leftRearPwmCmd = leftPwmCmd;
     rightRearPwmCmd = rightPwmCmd;
 }
-
-void adaptSpeed(uint8_t speedRequest, uint8_t& leftRearPwmCmd, uint8_t& rightRearPwmCmd, float currentRPM_L, float currentRPM_R, float& sumIntegralLeft, float& sumIntegralRight){
-    if ((speedRequest == 0)){
-        calculateSpeed(0.0, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
-    }
-    else if((speedRequest == 1)){
-        calculateSpeed(30.0, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
-    }
-    else if((speedRequest == 2)){
-        calculateSpeed(60.0, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight); 
-    }
-}

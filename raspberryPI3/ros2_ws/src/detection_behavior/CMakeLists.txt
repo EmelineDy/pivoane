@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(car_data)
+project(detection_behavior)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -7,17 +7,20 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(interfaces REQUIRED)
 
-add_executable(car_data src/car_data.cpp)
-target_include_directories(car_data PUBLIC
+add_executable(detection_behavior_node src/detection_behavior_node.cpp)
+
+ament_target_dependencies(detection_behavior_node rclcpp interfaces)
+ament_export_include_directories(include)
+
+target_include_directories(detection_behavior_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(car_data PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(detection_behavior_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-install(TARGETS car_data
+install(TARGETS detection_behavior_node
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
