@@ -138,6 +138,7 @@ class detection_behavior : public rclcpp::Node {
         us_detect = obstacles.us_detect;
         lidar_detect = obstacles.lidar_detect;
         ai_detect = obstacles.ai_detect; 
+        counter = 0;
       }  
     }
 };
