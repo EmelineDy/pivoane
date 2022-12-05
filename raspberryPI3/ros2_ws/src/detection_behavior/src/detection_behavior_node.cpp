@@ -44,6 +44,7 @@ class detection_behavior : public rclcpp::Node {
     int speed_before_obs = 0;
     int speed_before_stop = 0;
     int current_speed = 60;
+    int speed_before_sb = 0;
 
     int counter = 0;
 
@@ -62,32 +63,56 @@ class detection_behavior : public rclcpp::Node {
       auto speedMsg = interfaces::msg::RequiredSpeed();
 
       if(us_detect == 1 || lidar_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton à 50cm
-          speed_before_obs = current_speed;
+          if(current_speed != 0){
+            RCLCPP_INFO(this->get_logger(), "pieton : vitesse de 0");
+            speed_before_obs = current_speed;
+          }
           current_speed = 0;
         } else if(ai_detect == 1){ //Si panneau stop
-          speed_before_stop = current_speed;
-          if(counter!=2000){  //être à l'arrêt pendant 2s
-            current_speed = 0;
-            counter ++;
-          }
+            if(current_speed != 0){
+              RCLCPP_INFO(this->get_logger(), "panneau stop : vitesse de 0");
+              speed_before_stop = current_speed;
+            }
+            if(counter!=2000){  //être à l'arrêt pendant 2s
+              current_speed = 0;
+              counter ++;
+            }else{
+              current_speed = last_speed;
+            }
         } else if(ai_detect == 2){ //Si panneau cédez-le-passage
-          last_speed = current_speed;
-          if(counter!=2000){  //ralentir pendant 2s
-            current_speed = 15;
-            counter ++;
-          }
+            if(current_speed != 15){
+              RCLCPP_INFO(this->get_logger(), "panneau cedez le passage : vitesse de 15");
+              last_speed = current_speed;
+            }
+            if(counter!=2000){  //ralentir pendant 2s
+              current_speed = 15;
+              counter ++;
+            }else{
+              current_speed = last_speed;
+            }
         } else if(ai_detect == 3){ //Si panneau dos d'âne
-          last_speed = current_speed;
-          if(counter!=2000){  //ralentir pendant 2s
-            current_speed = 30;
-            counter ++;
-          }
+            if(current_speed != 30){
+              RCLCPP_INFO(this->get_logger(), "panneau dos ane : vitesse 30");
+              speed_before_sb = current_speed;
+            }
+            if(counter!=2000){  //ralentir pendant 2s
+              current_speed = 30;
+              counter ++;
+            }else{
+              current_speed = last_speed;
+            }
         } else if (ai_detect == 4) { //Si détection de panneau vitesse basse, et pas de panneau de travaux détecté avant
-          last_speed = current_speed;
-          current_speed = 36;
+            if(current_speed != 36){
+              RCLCPP_INFO(this->get_logger(), "panneau vitesse basse : vitesse 36");
+              last_speed = current_speed;
+            }
+            current_speed = 36;
         } else if (ai_detect == 6) { //Si détection de panneau fin de limitation
-          current_speed = last_speed;
-          last_speed = 0;
+            if(last_speed != 0){
+              RCLCPP_INFO(this->get_logger(), "panneau fin limitation : vitesse 36");
+              current_speed = last_speed;
+            }
+            last_speed = 0;
         }else if (ai_detect == 7) { //Si détection de panneau vitesse haute, et pas de panneau de travaux détecté avant
           last_speed = 0;
           current_speed = 60;
@@ -98,6 +123,9 @@ class detection_behavior : public rclcpp::Node {
           } else if(speed_before_stop != 0) {
             current_speed = speed_before_stop;
             speed_before_stop = 0;
+          } else if(speed_before_sb != 0){
+            current_speed = speed_before_sb;
+            speed_before_sb = 0;
           }
         }   
         speedMsg.speed_rpm = current_speed; 
