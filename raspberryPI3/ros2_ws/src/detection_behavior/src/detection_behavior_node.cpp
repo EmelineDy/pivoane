@@ -45,6 +45,7 @@ class detection_behavior : public rclcpp::Node {
     int speed_before_stop = 0;
     int current_speed = 60;
     int speed_before_sb = 0;
+    int speed_before_yield = 0;
 
     int counter = 0;
 
@@ -82,13 +83,13 @@ class detection_behavior : public rclcpp::Node {
         } else if(ai_detect == 2){ //Si panneau cédez-le-passage
             if(current_speed != 20){
               RCLCPP_INFO(this->get_logger(), "panneau cedez le passage : vitesse de 20");
-              last_speed = current_speed;
+              speed_before_yield = current_speed;
             }
             if(counter!=2000){  //ralentir pendant 2s
               current_speed = 20;
               counter ++;
             }else{
-              current_speed = last_speed;
+              current_speed = speed_before_yield;
             }
         } else if(ai_detect == 3){ //Si panneau dos d'âne
             if(current_speed != 30){
@@ -126,7 +127,11 @@ class detection_behavior : public rclcpp::Node {
           } else if(speed_before_sb != 0){
             current_speed = speed_before_sb;
             speed_before_sb = 0;
+          } else if(speed_before_yield != 0){
+            current_speed = speed_before_yield;
+            speed_before_yield = 0;
           }
+
         }   
         speedMsg.speed_rpm = current_speed; 
         publisher_required_speed_->publish(speedMsg);
