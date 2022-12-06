@@ -77,7 +77,7 @@ class detection_behavior : public rclcpp::Node {
               current_speed = 0;
               counter ++;
             }else{
-              current_speed = last_speed;
+              current_speed = speed_before_stop;
             }
         } else if(ai_detect == 2){ //Si panneau cédez-le-passage
             if(current_speed != 20){
