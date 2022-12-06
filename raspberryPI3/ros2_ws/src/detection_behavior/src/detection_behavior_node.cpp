@@ -7,6 +7,7 @@
 
 #include "interfaces/msg/obstacles.hpp"
 #include "interfaces/msg/required_speed.hpp"
+#include "interfaces/msg/sign_data.hpp"
 
 
 #include "../include/detection_behavior/detection_behavior_node.h"
@@ -26,6 +27,9 @@ class detection_behavior : public rclcpp::Node {
 
       subscription_obstacles_ = this->create_subscription<interfaces::msg::Obstacles>(
         "obstacles", 10, std::bind(&detection_behavior::obsDataCallback, this, _1));
+      
+      //subscription_sign_ = this->create_subscription<interfaces::msg::SignData>(
+        //"sign_data", 10, std::bind(&detection_behavior::signDataCallback, this, _1));
     
       RCLCPP_INFO(this->get_logger(), "detection behavior READY");
 
@@ -54,6 +58,7 @@ class detection_behavior : public rclcpp::Node {
 
     //Subscriber
     rclcpp::Subscription<interfaces::msg::Obstacles>::SharedPtr subscription_obstacles_;
+    //rclcpp::Subscription<interfaces::msg::SignData>::SharedPtr subscription_sign_;
 
     //Timer
     rclcpp::TimerBase::SharedPtr timer_;
@@ -146,6 +151,14 @@ class detection_behavior : public rclcpp::Node {
         counter = 0;
       }  
     }
+
+/*
+    void signDataCallback(const interfaces::msg::SignData & sign_data) {
+      if (sign_data.react == true) {
+        ai_detect == sign_type;
+      } 
+    }
+    */
 };
 
 int main(int argc, char * argv[])

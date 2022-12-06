@@ -48,6 +48,12 @@ def generate_launch_description():
         emulate_tty=True
     )
 
+    odometry_node = Node(
+        package="odometry",
+        executable="odometry_node",
+        emulate_tty=True
+    )
+
 
     config_dir = os.path.join(get_package_share_directory('imu_filter_madgwick'), 'config')
 
@@ -74,6 +80,7 @@ def generate_launch_description():
     ld.add_action(imu_filter_madgwick_node)
     ld.add_action(us_detection_node)
     ld.add_action(detection_behavior_node)
+    ld.add_action(odometry_node)
     ld.add_action(system_check_node)
 
     return ld
