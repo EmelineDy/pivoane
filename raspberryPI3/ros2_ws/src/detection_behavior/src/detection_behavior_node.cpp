@@ -80,12 +80,12 @@ class detection_behavior : public rclcpp::Node {
               current_speed = last_speed;
             }
         } else if(ai_detect == 2){ //Si panneau cédez-le-passage
-            if(current_speed != 15){
-              RCLCPP_INFO(this->get_logger(), "panneau cedez le passage : vitesse de 15");
+            if(current_speed != 20){
+              RCLCPP_INFO(this->get_logger(), "panneau cedez le passage : vitesse de 20");
               last_speed = current_speed;
             }
             if(counter!=2000){  //ralentir pendant 2s
-              current_speed = 15;
+              current_speed = 20;
               counter ++;
             }else{
               current_speed = last_speed;
@@ -99,7 +99,7 @@ class detection_behavior : public rclcpp::Node {
               current_speed = 30;
               counter ++;
             }else{
-              current_speed = last_speed;
+              current_speed = speed_before_sb;
             }
         } else if (ai_detect == 4) { //Si détection de panneau vitesse basse, et pas de panneau de travaux détecté avant
             if(current_speed != 36){
