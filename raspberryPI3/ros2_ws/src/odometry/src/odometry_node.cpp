@@ -7,6 +7,7 @@
 
 #include "interfaces/msg/sign_data.hpp"
 #include "interfaces/msg/motors_feedback.hpp"
+#include "interfaces/msg/reaction.hpp"
 
 
 #include "../include/odometry/odometry_node.h"
@@ -22,7 +23,7 @@ class odometry : public rclcpp::Node {
     odometry()
     : Node("odometry_node")
     {
-      publisher_sign_data_ = this->create_publisher<interfaces::msg::SignData>("sign_data", 10);
+      publisher_reaction_ = this->create_publisher<interfaces::msg::Reaction>("reaction", 10);
    
       subscription_motors_feedback_ = this->create_subscription<interfaces::msg::MotorsFeedback>(
         "motors_feedback", 10, std::bind(&odometry::motorsFeedbackCallback, this, _1));
@@ -36,7 +37,7 @@ class odometry : public rclcpp::Node {
   private:
 
     //Publisher
-    rclcpp::Publisher<interfaces::msg::SignData>::SharedPtr publisher_sign_data_;
+    rclcpp::Publisher<interfaces::msg::Reaction>::SharedPtr publisher_reaction_;
 
     //Subscriber
     rclcpp::Subscription<interfaces::msg::SignData>::SharedPtr subscription_sign_data_;
@@ -58,25 +59,26 @@ class odometry : public rclcpp::Node {
     void motorsFeedbackCallback(const interfaces::msg::MotorsFeedback & motorsFeedback){
 
       //Calculate distance traveled in total
-      totalDistance += calculateDistance(motorsFeedback.left_rear_odometry,motorsFeedback.right_rear_odometry);
+      totalDistance += calculateDistance(motorsFeedback.left_rear_odometry, motorsFeedback.right_rear_odometry);
 
-      auto signMsg = interfaces::msg::SignData();
+      auto reactMsg = interfaces::msg::Reaction();
 
       //If the distance between the car and the last detected sign is null, the car can react
       if ((pastSignDist - totalDistance ) <= 0) {
-        signMsg.react = true;
-        publisher_sign_data_->publish(signMsg);
-      } else if (signMsg.react) {
-        signMsg.react = false;
-        publisher_sign_data_->publish(signMsg);
+        reactMsg.react = true;
+        publisher_reaction_->publish(reactMsg);
       }
     }
 
     void signDataCallback(const interfaces::msg::SignData & signData){
 
+      auto reactMsg = interfaces::msg::Reaction();
+
       if (signData.sign_distance != pastSignDist) {
-          pastSignDist = signData.sign_distance;
-          totalDistance = 0;
+        pastSignDist = signData.sign_distance;
+        totalDistance = 0;
+        reactMsg.react = false;
+        publisher_reaction_->publish(reactMsg);
       }
     }
 };
