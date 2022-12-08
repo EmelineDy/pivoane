@@ -159,8 +159,10 @@ class detection_behavior : public rclcpp::Node {
 
 
     void reactionCallback(const interfaces::msg::Reaction & reaction) {
+      if (state == false && reaction.react == true) {
+        counter = 0;
+      }
       state = reaction.react;
-      counter = 0;
     }
 };
 
