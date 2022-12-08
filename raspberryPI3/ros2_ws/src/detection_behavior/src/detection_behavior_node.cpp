@@ -75,7 +75,7 @@ class detection_behavior : public rclcpp::Node {
           RCLCPP_INFO(this->get_logger(), "pieton : vitesse de 0");
           speed_before_obs = current_speed;
         }
-          current_speed = 0;
+        current_speed = 0;
       } else if (state == true) {
         if(ai_detect == 1){ //Si panneau stop
           if(current_speed != 0){
@@ -140,10 +140,11 @@ class detection_behavior : public rclcpp::Node {
             speed_before_yield = 0;
           }
 
-        }   
-        speedMsg.speed_rpm = current_speed; 
-        publisher_required_speed_->publish(speedMsg);
-      }
+        } 
+      }  
+      speedMsg.speed_rpm = current_speed; 
+      publisher_required_speed_->publish(speedMsg);
+      
     }
 
     void obsDataCallback(const interfaces::msg::Obstacles & obstacles){
