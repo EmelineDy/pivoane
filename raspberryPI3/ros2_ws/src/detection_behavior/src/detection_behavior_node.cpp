@@ -78,7 +78,7 @@ class detection_behavior : public rclcpp::Node {
         current_speed = 0;
       } else if (state == true) {
         if(ai_detect == 1){ //Si panneau stop
-          if(current_speed != 0){
+          if(current_speed != 0 && counter == 0){
             RCLCPP_INFO(this->get_logger(), "panneau stop : vitesse de 0");
             speed_before_stop = current_speed;
           }
@@ -160,6 +160,7 @@ class detection_behavior : public rclcpp::Node {
 
     void reactionCallback(const interfaces::msg::Reaction & reaction) {
       state = reaction.react;
+      counter = 0;
     }
 };
 
