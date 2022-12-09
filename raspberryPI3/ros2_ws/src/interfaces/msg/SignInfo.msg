@@ -1,1 +1,0 @@
-float32 sign_distance 2000

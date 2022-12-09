@@ -22,9 +22,8 @@ set(msg_files
   "msg/Gnss.msg"
   "msg/SystemCheck.msg"
   "msg/Obstacles.msg"
-  "msg/BehaviorInfo.msg"
-  "msg/AiInfo.msg"
-  "msg/SignInfo.msg"
+  "msg/RequiredSpeed.msg"
+  "msg/SignData.msg"
   "msg/Reaction.msg"
 )
 

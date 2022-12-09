@@ -5,10 +5,9 @@
 #include <chrono>
 #include <cstdio>
 
-#include "interfaces/msg/sign_info.hpp"
+#include "interfaces/msg/sign_data.hpp"
 #include "interfaces/msg/motors_feedback.hpp"
 #include "interfaces/msg/reaction.hpp"
-#include "interfaces/msg/behavior_info.hpp"
 
 
 #include "../include/odometry/odometry_node.h"
@@ -28,12 +27,9 @@ class odometry : public rclcpp::Node {
    
       subscription_motors_feedback_ = this->create_subscription<interfaces::msg::MotorsFeedback>(
         "motors_feedback", 10, std::bind(&odometry::motorsFeedbackCallback, this, _1));
-
-      subscription_behavior_info_ = this->create_subscription<interfaces::msg::BehaviorInfo>(
-        "behavior_info", 10, std::bind(&odometry::behaviorCallback, this, _1));
       
-      subscription_sign_info_ = this->create_subscription<interfaces::msg::SignInfo>(
-        "sign_info", 10, std::bind(&odometry::signInfoCallback, this, _1));
+      subscription_sign_data_ = this->create_subscription<interfaces::msg::SignData>(
+        "sign_data", 10, std::bind(&odometry::signDataCallback, this, _1));
     
       RCLCPP_INFO(this->get_logger(), "odometry_node READY");
     }
@@ -44,12 +40,11 @@ class odometry : public rclcpp::Node {
     rclcpp::Publisher<interfaces::msg::Reaction>::SharedPtr publisher_reaction_;
 
     //Subscriber
-    rclcpp::Subscription<interfaces::msg::SignInfo>::SharedPtr subscription_sign_info_;
+    rclcpp::Subscription<interfaces::msg::SignData>::SharedPtr subscription_sign_data_;
     rclcpp::Subscription<interfaces::msg::MotorsFeedback>::SharedPtr subscription_motors_feedback_;
-    rclcpp::Subscription<interfaces::msg::BehaviorInfo>::SharedPtr subscription_behavior_info_;
 
     float totalDistance = 0;
-    float pastSignDist = 20000;
+    float pastSignDist = -1;
 
 
     //Calculate distance travelled by the car based on odometry
@@ -75,23 +70,13 @@ class odometry : public rclcpp::Node {
       }
     }
 
-    void signInfoCallback(const interfaces::msg::SignInfo & signInfo){
-
-      //auto reactMsg = interfaces::msg::Reaction();
-
-      if (signInfo.sign_distance != pastSignDist) {
-        pastSignDist = signInfo.sign_distance;
-        totalDistance = 0;
-        //reactMsg.react = false;
-        //publisher_reaction_->publish(reactMsg);
-      }
-    }
-
-    void behaviorCallback(const interfaces::msg::BehaviorInfo & behaviorInfo){
+    void signDataCallback(const interfaces::msg::SignData & signData){
 
       auto reactMsg = interfaces::msg::Reaction();
 
-      if (behaviorInfo.done == true) {
+      if (signData.sign_distance != pastSignDist) {
+        pastSignDist = signData.sign_distance;
+        totalDistance = 0;
         reactMsg.react = false;
         publisher_reaction_->publish(reactMsg);
       }
