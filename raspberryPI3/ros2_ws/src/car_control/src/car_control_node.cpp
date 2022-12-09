@@ -103,7 +103,7 @@ private:
         }
     }
 
-    void reqspeedCallback(const interfaces::msg::BehaviorInfo & behavior_info){
+    void behaviorCallback(const interfaces::msg::BehaviorInfo & behavior_info){
         if (behavior_info.speed_rpm != speed_rpm){ //if speed order change
         speed_rpm = behavior_info.speed_rpm;
         RCLCPP_INFO(this->get_logger(), "Get data from topic speed");
