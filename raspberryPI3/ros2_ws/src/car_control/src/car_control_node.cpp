@@ -7,7 +7,7 @@
 #include "interfaces/msg/motors_feedback.hpp"
 #include "interfaces/msg/steering_calibration.hpp"
 #include "interfaces/msg/joystick_order.hpp"
-#include "interfaces/msg/required_speed.hpp"
+#include "interfaces/msg/behavior_info.hpp"
 
 #include "std_srvs/srv/empty.hpp"
 
@@ -47,8 +47,8 @@ public:
         subscription_steering_calibration_ = this->create_subscription<interfaces::msg::SteeringCalibration>(
         "steering_calibration", 10, std::bind(&car_control::steeringCalibrationCallback, this, _1));
 
-        subscription_required_speed_ = this->create_subscription<interfaces::msg::RequiredSpeed>(
-        "required_speed", 10, std::bind(&car_control::reqspeedCallback, this, _1));
+        subscription_behavior_info_ = this->create_subscription<interfaces::msg::BehaviorInfo>(
+        "behavior_info", 10, std::bind(&car_control::behaviorCallback, this, _1));
 
 
         server_calibration_ = this->create_service<std_srvs::srv::Empty>(
@@ -103,9 +103,9 @@ private:
         }
     }
 
-    void reqspeedCallback(const interfaces::msg::RequiredSpeed & required_speed){
-        if (required_speed.speed_rpm != speed_rpm){ //if speed order change
-        speed_rpm = required_speed.speed_rpm;
+    void reqspeedCallback(const interfaces::msg::BehaviorInfo & behavior_info){
+        if (behavior_info.speed_rpm != speed_rpm){ //if speed order change
+        speed_rpm = behavior_info.speed_rpm;
         RCLCPP_INFO(this->get_logger(), "Get data from topic speed");
         }
     }
@@ -259,7 +259,7 @@ private:
     rclcpp::Subscription<interfaces::msg::JoystickOrder>::SharedPtr subscription_joystick_order_;
     rclcpp::Subscription<interfaces::msg::MotorsFeedback>::SharedPtr subscription_motors_feedback_;
     rclcpp::Subscription<interfaces::msg::SteeringCalibration>::SharedPtr subscription_steering_calibration_;
-    rclcpp::Subscription<interfaces::msg::RequiredSpeed>::SharedPtr subscription_required_speed_;
+    rclcpp::Subscription<interfaces::msg::BehaviorInfo>::SharedPtr subscription_behavior_info_;
 
     //Timer
     rclcpp::TimerBase::SharedPtr timer_;
