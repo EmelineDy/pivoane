@@ -68,7 +68,8 @@ class odometry : public rclcpp::Node {
       } else if (reacted == false){
         reacted = true;
         reactMsg.react = true;
-        publisher_reaction_->publish(reactMsg);        
+        publisher_reaction_->publish(reactMsg);   
+        RCLCPP_INFO(this->get_logger(), "React TRUE");     
       }
     }
 
@@ -82,6 +83,7 @@ class odometry : public rclcpp::Node {
         reactMsg.react = false;
         reacted = false;
         publisher_reaction_->publish(reactMsg);
+        RCLCPP_INFO(this->get_logger(), "React FALSE");
       }
     }
 };

@@ -87,18 +87,18 @@ class detection_behavior : public rclcpp::Node {
             RCLCPP_INFO(this->get_logger(), "panneau stop : vitesse de 0");
             speed_before_stop = current_speed;
           }
-          if(counter!=2000){  //être à l'arrêt pendant 2s
+          if(counter<=2000){  //être à l'arrêt pendant 2s
             current_speed = 0;
             counter ++;
           }else{
             current_speed = speed_before_stop;
           }
-        } else if(ai_detect == 2 && counter == 0){ //Si panneau cédez-le-passage
+        } else if(ai_detect == 2){ //Si panneau cédez-le-passage
           if(current_speed != 20){
             RCLCPP_INFO(this->get_logger(), "panneau cedez le passage : vitesse de 20");
             speed_before_yield = current_speed;
           }
-          if(counter!=2000){  //ralentir pendant 2s
+          if(counter<=2000){  //ralentir pendant 2s
             current_speed = 20;
             counter ++;
           }else{
@@ -109,7 +109,7 @@ class detection_behavior : public rclcpp::Node {
             RCLCPP_INFO(this->get_logger(), "panneau dos ane : vitesse 30");
             speed_before_sb = current_speed;
           }
-          if(counter!=2000){  //ralentir pendant 2s
+          if(counter<=2000){  //ralentir pendant 2s
             current_speed = 30;
             counter ++;
           }else{
@@ -134,17 +134,7 @@ class detection_behavior : public rclcpp::Node {
           if(speed_before_obs != 0){
             current_speed = speed_before_obs;
             speed_before_obs = 0;
-          } else if(speed_before_stop != 0) {
-            current_speed = speed_before_stop;
-            speed_before_stop = 0;
-          } else if(speed_before_sb != 0){
-            current_speed = speed_before_sb;
-            speed_before_sb = 0;
-          } else if(speed_before_yield != 0){
-            current_speed = speed_before_yield;
-            speed_before_yield = 0;
-          }
-
+          } 
         } 
       }  
       speedMsg.speed_rpm = current_speed; 
