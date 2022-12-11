@@ -45,6 +45,7 @@ class odometry : public rclcpp::Node {
 
     float totalDistance = 0;
     float pastSignDist = -1;
+    bool reacted = false;
 
 
     //Calculate distance travelled by the car based on odometry
@@ -58,15 +59,16 @@ class odometry : public rclcpp::Node {
 
     void motorsFeedbackCallback(const interfaces::msg::MotorsFeedback & motorsFeedback){
 
-      //Calculate distance traveled in total
-      totalDistance += calculateDistance(motorsFeedback.left_rear_odometry, motorsFeedback.right_rear_odometry);
-
       auto reactMsg = interfaces::msg::Reaction();
 
       //If the distance between the car and the last detected sign is null, the car can react
-      if ((pastSignDist - totalDistance ) <= 0) {
+      if ((pastSignDist - totalDistance ) > 0) {
+        //Calculate distance traveled in total
+        totalDistance += calculateDistance(motorsFeedback.left_rear_odometry, motorsFeedback.right_rear_odometry);
+      } else if (reacted == false){
+        reacted = true;
         reactMsg.react = true;
-        publisher_reaction_->publish(reactMsg);
+        publisher_reaction_->publish(reactMsg);        
       }
     }
 
@@ -78,6 +80,7 @@ class odometry : public rclcpp::Node {
         pastSignDist = signData.sign_distance;
         totalDistance = 0;
         reactMsg.react = false;
+        reacted = false;
         publisher_reaction_->publish(reactMsg);
       }
     }

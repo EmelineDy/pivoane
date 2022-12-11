@@ -8,6 +8,7 @@
 #include "interfaces/msg/obstacles.hpp"
 #include "interfaces/msg/required_speed.hpp"
 #include "interfaces/msg/reaction.hpp"
+#include "interfaces/msg/sign_data.hpp"
 
 
 #include "../include/detection_behavior/detection_behavior_node.h"
@@ -30,6 +31,9 @@ class detection_behavior : public rclcpp::Node {
       
       subscription_reaction_ = this->create_subscription<interfaces::msg::Reaction>(
         "reaction", 10, std::bind(&detection_behavior::reactionCallback, this, _1));
+
+      subscription_sign_data_ = this->create_subscription<interfaces::msg::SignData>(
+        "sign_data", 10, std::bind(&detection_behavior::signDataCallback, this, _1));
     
       RCLCPP_INFO(this->get_logger(), "detection behavior READY");
 
@@ -61,6 +65,7 @@ class detection_behavior : public rclcpp::Node {
     //Subscriber
     rclcpp::Subscription<interfaces::msg::Obstacles>::SharedPtr subscription_obstacles_;
     rclcpp::Subscription<interfaces::msg::Reaction>::SharedPtr subscription_reaction_;
+    rclcpp::Subscription<interfaces::msg::SignData>::SharedPtr subscription_sign_data_;
 
     //Timer
     rclcpp::TimerBase::SharedPtr timer_;
@@ -88,7 +93,7 @@ class detection_behavior : public rclcpp::Node {
           }else{
             current_speed = speed_before_stop;
           }
-        } else if(ai_detect == 2){ //Si panneau cédez-le-passage
+        } else if(ai_detect == 2 && counter == 0){ //Si panneau cédez-le-passage
           if(current_speed != 20){
             RCLCPP_INFO(this->get_logger(), "panneau cedez le passage : vitesse de 20");
             speed_before_yield = current_speed;
@@ -100,7 +105,7 @@ class detection_behavior : public rclcpp::Node {
             current_speed = speed_before_yield;
           }
         } else if(ai_detect == 3){ //Si panneau dos d'âne
-          if(current_speed != 30){
+          if(current_speed != 30 && counter == 0){
             RCLCPP_INFO(this->get_logger(), "panneau dos ane : vitesse 30");
             speed_before_sb = current_speed;
           }
@@ -149,10 +154,15 @@ class detection_behavior : public rclcpp::Node {
 
     void obsDataCallback(const interfaces::msg::Obstacles & obstacles){
 
-      if (us_detect != obstacles.us_detect || lidar_detect != obstacles.lidar_detect || ai_detect != obstacles.ai_detect) {
+      if (us_detect != obstacles.us_detect || lidar_detect != obstacles.lidar_detect) {
         us_detect = obstacles.us_detect;
         lidar_detect = obstacles.lidar_detect;
-        ai_detect = obstacles.ai_detect; 
+      }  
+    }
+
+    void signDataCallback(const interfaces::msg::SignData & signData){
+      if (ai_detect != signData.sign_type) {
+        ai_detect = signData.sign_type; 
         counter = 0;
       }  
     }
