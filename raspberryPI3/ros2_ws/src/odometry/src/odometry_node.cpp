@@ -44,7 +44,7 @@ class odometry : public rclcpp::Node {
     rclcpp::Subscription<interfaces::msg::MotorsFeedback>::SharedPtr subscription_motors_feedback_;
 
     float totalDistance = 0;
-    float pastSignDist = -1;
+    float pastSignDist = 3000;
     bool reacted = false;
 
 
