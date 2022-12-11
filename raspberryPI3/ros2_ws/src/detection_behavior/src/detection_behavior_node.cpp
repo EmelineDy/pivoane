@@ -123,7 +123,7 @@ class detection_behavior : public rclcpp::Node {
           current_speed = 36;
         } else if (ai_detect == 6) { //Si détection de panneau fin de limitation
             if(last_speed != 0){
-              RCLCPP_INFO(this->get_logger(), "panneau fin limitation : vitesse 36");
+              RCLCPP_INFO(this->get_logger(), "panneau fin limitation : vitesse 60");
               current_speed = last_speed;
             }
             last_speed = 0;
