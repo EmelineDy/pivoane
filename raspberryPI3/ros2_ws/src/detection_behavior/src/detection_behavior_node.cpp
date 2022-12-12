@@ -75,13 +75,13 @@ class detection_behavior : public rclcpp::Node {
 
       auto speedMsg = interfaces::msg::RequiredSpeed();
 
-      if(us_detect == 1 || lidar_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton à 50cm
-        if(current_speed != 0 && speed_before_obs == 0){
+      if(us_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton à 50cm
+        if(current_speed != 0){
           RCLCPP_INFO(this->get_logger(), "pieton : vitesse de 0");
           speed_before_obs = current_speed;
         }
         current_speed = 0;
-      } else if (us_detect == 1 || lidar_detect == 1) {
+      } else if (us_detect == 0) {
         if(speed_before_obs != 0){
           current_speed = speed_before_obs;
           speed_before_obs = 0;
