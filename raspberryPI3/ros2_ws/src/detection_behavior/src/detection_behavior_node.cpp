@@ -81,7 +81,7 @@ class detection_behavior : public rclcpp::Node {
           speed_before_obs = current_speed;
         }
         current_speed = 0;
-      }  else if (state == true) {
+      }  else if (state == true && speed_before_obs == 0) {
         if(ai_detect == 1){ //Si panneau stop
           if(current_speed != 0 && counter == 0){
             RCLCPP_INFO(this->get_logger(), "panneau stop : vitesse de 0");
@@ -130,26 +130,12 @@ class detection_behavior : public rclcpp::Node {
         }else if (ai_detect == 7) { //Si détection de panneau vitesse haute, et pas de panneau de travaux détecté avant
           last_speed = 0;
           current_speed = 60;
-        } else if (ai_detect == 0 && lidar_detect == 0 && us_detect == 0){ //Si rien n'est détecté (situation de départ)
-          if(speed_before_obs != 0){
-            current_speed = speed_before_obs;
-            speed_before_obs = 0;
-          } else if(speed_before_stop != 0) {
-            current_speed = speed_before_stop;
-            speed_before_stop = 0;
-          } else if(speed_before_sb != 0){
-            current_speed = speed_before_sb;
-            speed_before_sb = 0;
-          } else if(speed_before_yield != 0){
-            current_speed = speed_before_yield;
-            speed_before_yield = 0;
-          }
-
-        } 
+        }  
       } else if (us_detect == 0) {
         if(speed_before_obs != 0){
           current_speed = speed_before_obs;
           speed_before_obs = 0;
+          RCLCPP_INFO(this->get_logger(), "pieton : reprise vitesse %i", speed_before_obs);
           }      
       } 
       speedMsg.speed_rpm = current_speed; 
