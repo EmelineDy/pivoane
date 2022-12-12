@@ -81,12 +81,7 @@ class detection_behavior : public rclcpp::Node {
           speed_before_obs = current_speed;
         }
         current_speed = 0;
-      } else if (us_detect == 0) {
-        if(speed_before_obs != 0){
-          current_speed = speed_before_obs;
-          speed_before_obs = 0;
-          }      
-      } else if (state == true) {
+      }  else if (state == true) {
         if(ai_detect == 1){ //Si panneau stop
           if(current_speed != 0 && counter == 0){
             RCLCPP_INFO(this->get_logger(), "panneau stop : vitesse de 0");
@@ -151,7 +146,12 @@ class detection_behavior : public rclcpp::Node {
           }
 
         } 
-      }  
+      } else if (us_detect == 0) {
+        if(speed_before_obs != 0){
+          current_speed = speed_before_obs;
+          speed_before_obs = 0;
+          }      
+      } 
       speedMsg.speed_rpm = current_speed; 
       publisher_required_speed_->publish(speedMsg);
       
