@@ -9,10 +9,11 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(interfaces REQUIRED)
+find_package(darknet_ros_msgs REQUIRED)
 
 add_executable(detection_behavior_node src/detection_behavior_node.cpp)
 
-ament_target_dependencies(detection_behavior_node rclcpp interfaces)
+ament_target_dependencies(detection_behavior_node rclcpp interfaces darknet_ros_msgs)
 ament_export_include_directories(include)
 
 target_include_directories(detection_behavior_node PUBLIC

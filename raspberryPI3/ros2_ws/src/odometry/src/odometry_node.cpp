@@ -4,10 +4,13 @@
 
 #include <chrono>
 #include <cstdio>
+#include <string>
 
 #include "interfaces/msg/sign_data.hpp"
 #include "interfaces/msg/motors_feedback.hpp"
 #include "interfaces/msg/reaction.hpp"
+#include "darknet_ros_msgs/msg/bounding_box.hpp"
+
 
 
 #include "../include/odometry/odometry_node.h"
@@ -28,7 +31,7 @@ class odometry : public rclcpp::Node {
       subscription_motors_feedback_ = this->create_subscription<interfaces::msg::MotorsFeedback>(
         "motors_feedback", 10, std::bind(&odometry::motorsFeedbackCallback, this, _1));
       
-      subscription_sign_data_ = this->create_subscription<interfaces::msg::SignData>(
+      subscription_sign_data_ = this->create_subscription<darknet_ros_msgs::msg::BoundingBox>(
         "sign_data", 10, std::bind(&odometry::signDataCallback, this, _1));
     
       RCLCPP_INFO(this->get_logger(), "odometry_node READY");
@@ -40,10 +43,11 @@ class odometry : public rclcpp::Node {
     rclcpp::Publisher<interfaces::msg::Reaction>::SharedPtr publisher_reaction_;
 
     //Subscriber
-    rclcpp::Subscription<interfaces::msg::SignData>::SharedPtr subscription_sign_data_;
+    rclcpp::Subscription<darknet_ros_msgs::msg::BoundingBox>::SharedPtr subscription_sign_data_;
     rclcpp::Subscription<interfaces::msg::MotorsFeedback>::SharedPtr subscription_motors_feedback_;
 
     float totalDistance = 0;
+    string pastSignType = "f";
     float pastSignDist = 3000;
     bool reacted = false;
 
@@ -73,12 +77,13 @@ class odometry : public rclcpp::Node {
       }
     }
 
-    void signDataCallback(const interfaces::msg::SignData & signData){
+    void signDataCallback(const darknet_ros_msgs::msg::BoundingBox & signData){
 
       auto reactMsg = interfaces::msg::Reaction();
 
-      if (signData.sign_distance != pastSignDist) {
-        pastSignDist = signData.sign_distance;
+      if (signData.class_id != pastSignType && signData.class_id != "person") {
+        pastSignType = signData.class_id;
+        pastSignDist = signData.distance;
         totalDistance = 0;
         reactMsg.react = false;
         reacted = false;
