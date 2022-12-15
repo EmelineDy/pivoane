@@ -10,7 +10,6 @@
 #include "interfaces/msg/required_speed.hpp"
 #include "interfaces/msg/reaction.hpp"
 #include "interfaces/msg/sign_data.hpp"
-#include "darknet_ros_msgs/msg/bounding_box.hpp"
 
 
 #include "../include/detection_behavior/detection_behavior_node.h"
@@ -33,9 +32,6 @@ class detection_behavior : public rclcpp::Node {
       
       subscription_reaction_ = this->create_subscription<interfaces::msg::Reaction>(
         "reaction", 10, std::bind(&detection_behavior::reactionCallback, this, _1));
-
-      subscription_sign_data_ = this->create_subscription<darknet_ros_msgs::msg::BoundingBox>(
-      "sign_data", 10, std::bind(&detection_behavior::signDataCallback, this, _1));
     
     
       RCLCPP_INFO(this->get_logger(), "detection behavior READY");
@@ -68,7 +64,6 @@ class detection_behavior : public rclcpp::Node {
     //Subscriber
     rclcpp::Subscription<interfaces::msg::Obstacles>::SharedPtr subscription_obstacles_;
     rclcpp::Subscription<interfaces::msg::Reaction>::SharedPtr subscription_reaction_;
-    rclcpp::Subscription<darknet_ros_msgs::msg::BoundingBox>::SharedPtr subscription_sign_data_;
 
     //Timer
     rclcpp::TimerBase::SharedPtr timer_;
@@ -154,19 +149,16 @@ class detection_behavior : public rclcpp::Node {
       }  
     }
 
-    void signDataCallback(const darknet_ros_msgs::msg::BoundingBox & signData){
-      if (ai_detect != signData.class_id) {
-        ai_detect = signData.class_id; 
-        counter = 0;
-      }  
-    }
-
-
     void reactionCallback(const interfaces::msg::Reaction & reaction) {
       if (state == false && reaction.react == true) {
         counter = 0;
       }
       state = reaction.react;
+
+      if (ai_detect != reaction.class_id) {
+        ai_detect = reaction.class_id; 
+        counter = 0;
+      } 
     }
 };
 
