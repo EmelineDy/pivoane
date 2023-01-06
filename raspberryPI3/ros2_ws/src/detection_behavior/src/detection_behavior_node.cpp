@@ -9,6 +9,7 @@
 #include "interfaces/msg/obstacles.hpp"
 #include "interfaces/msg/required_speed.hpp"
 #include "interfaces/msg/reaction.hpp"
+#include "interfaces/msg/finish.hpp"
 #include "interfaces/msg/sign_data.hpp"
 
 
@@ -27,12 +28,13 @@ class detection_behavior : public rclcpp::Node {
     {
       publisher_required_speed_ = this->create_publisher<interfaces::msg::RequiredSpeed>("required_speed", 10);
 
+      publisher_finish_ = this->create_publisher<interfaces::msg::Finish>("finish", 10);
+
       subscription_obstacles_ = this->create_subscription<interfaces::msg::Obstacles>(
         "obstacles", 10, std::bind(&detection_behavior::obsDataCallback, this, _1));
       
       subscription_reaction_ = this->create_subscription<interfaces::msg::Reaction>(
         "reaction", 10, std::bind(&detection_behavior::reactionCallback, this, _1));
-    
     
       RCLCPP_INFO(this->get_logger(), "detection behavior READY");
 
@@ -56,10 +58,12 @@ class detection_behavior : public rclcpp::Node {
 
     int counter = 0;
 
-    bool state = false;
+    bool start_react = false;
+    bool finish_react = true;
 
     //Publisher
     rclcpp::Publisher<interfaces::msg::RequiredSpeed>::SharedPtr publisher_required_speed_;
+    rclcpp::Publisher<interfaces::msg::Finish>::SharedPtr publisher_finish_;
 
     //Subscriber
     rclcpp::Subscription<interfaces::msg::Obstacles>::SharedPtr subscription_obstacles_;
@@ -72,6 +76,7 @@ class detection_behavior : public rclcpp::Node {
     void updateSpeed(){
 
       auto speedMsg = interfaces::msg::RequiredSpeed();
+      auto finishMsg = interfaces::msg::Finish();
 
       if(us_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton à 50cm
         if(current_speed != 0){
@@ -79,7 +84,7 @@ class detection_behavior : public rclcpp::Node {
           speed_before_obs = current_speed;
         }
         current_speed = 0;
-      }  else if (state == true && speed_before_obs == 0) {
+      }  else if (start_react == true && speed_before_obs == 0) {
         if(ai_detect == "stop"){ //Si panneau stop
           if(current_speed != 0 && counter == 0){
             RCLCPP_INFO(this->get_logger(), "panneau stop : vitesse de 0");
@@ -90,6 +95,7 @@ class detection_behavior : public rclcpp::Node {
             counter ++;
           }else{
             current_speed = speed_before_stop;
+            finish_react = true;
           }
         } else if(ai_detect == "pass"){ //Si panneau cédez-le-passage
           if(current_speed != 20){
@@ -101,6 +107,7 @@ class detection_behavior : public rclcpp::Node {
             counter ++;
           }else{
             current_speed = speed_before_yield;
+            finish_react = true;
           }
         } else if(ai_detect == "speedbump"){ //Si panneau dos d'âne
           if(current_speed != 30 && counter == 0){
@@ -112,22 +119,26 @@ class detection_behavior : public rclcpp::Node {
             counter ++;
           }else{
             current_speed = speed_before_sb;
+            finish_react = true;
           }
-        } else if (ai_detect == "speed30") { //Si détection de panneau vitesse basse, et pas de panneau de travaux détecté avant
+        } else if (ai_detect == "speed30") { //Si détection de panneau vitesse basse
           if(current_speed != 36){
             RCLCPP_INFO(this->get_logger(), "panneau vitesse basse : vitesse 36");
             last_speed = current_speed;
           }
           current_speed = 36;
+          finish_react = true;
         } else if (ai_detect == "endspeed") { //Si détection de panneau fin de limitation
             if(last_speed != 0){
               RCLCPP_INFO(this->get_logger(), "panneau fin limitation : vitesse 60");
               current_speed = last_speed;
             }
             last_speed = 0;
-        }else if (ai_detect == "speed50") { //Si détection de panneau vitesse haute, et pas de panneau de travaux détecté avant
+            finish_react = true;
+        }else if (ai_detect == "speed50") { //Si détection de panneau vitesse haute
           last_speed = 0;
           current_speed = 60;
+          finish_react = true;
         }  
       } else if (us_detect == 0) {
         if(speed_before_obs != 0){
@@ -138,6 +149,9 @@ class detection_behavior : public rclcpp::Node {
       } 
       speedMsg.speed_rpm = current_speed; 
       publisher_required_speed_->publish(speedMsg);
+
+      finishMsg.ended = finish_react;
+      publisher_finish_->publish(finishMsg);
       
     }
 
@@ -150,10 +164,11 @@ class detection_behavior : public rclcpp::Node {
     }
 
     void reactionCallback(const interfaces::msg::Reaction & reaction) {
-      if (state == false && reaction.react == true) {
+      if (start_react == false && reaction.react == true) {
         counter = 0;
+        finish_react = false;
       }
-      state = reaction.react;
+      start_react = reaction.react;
 
       if (ai_detect != reaction.class_id) {
         ai_detect = reaction.class_id; 

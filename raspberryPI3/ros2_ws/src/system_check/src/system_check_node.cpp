@@ -6,7 +6,7 @@
 
 #include "sensor_msgs/msg/imu.hpp"
 #include "sensor_msgs/msg/magnetic_field.hpp"
-#include "sensor_msgs/msg/image.hpp"
+//#include "sensor_msgs/msg/image.hpp"
 #include "sensor_msgs/msg/laser_scan.hpp"
 
 #include "interfaces/msg/system_check.hpp"
@@ -51,8 +51,8 @@ public:
         subscription_imu_mag_ = this->create_subscription<sensor_msgs::msg::MagneticField>(
         "imu/mag", 10, std::bind(&system_check::imuMagCallback, this, _1));
 
-        subscription_camera_ = this->create_subscription<sensor_msgs::msg::Image>(
-        "image_raw", 10, std::bind(&system_check::cameraCallback, this, _1));
+        //subscription_camera_ = this->create_subscription<sensor_msgs::msg::Image>(
+        //"image_raw", 10, std::bind(&system_check::cameraCallback, this, _1));
 
         subscription_lidar_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
         "scan", 10, std::bind(&system_check::lidarCallback, this, _1));
@@ -472,12 +472,13 @@ private:
 
     /* Update cameraDetect from /image_raw [callback function]
     * 
-    */
+    
     void cameraCallback([[maybe_unused]] const sensor_msgs::msg::Image & cameraMsg){
         if (checkingInProgress && !cameraDetect){
             cameraDetect = true;
         }
     }
+    */
 
 
     // ----- Private Variables ------
@@ -527,7 +528,7 @@ private:
     rclcpp::Subscription<interfaces::msg::GeneralData>::SharedPtr subscription_general_data_;
     rclcpp::Subscription<interfaces::msg::Ultrasonic>::SharedPtr subscription_us_;
 
-    rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_camera_;
+    //rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr subscription_camera_;
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr subscription_lidar_;
 
     //Timers

@@ -9,11 +9,9 @@
 #include "interfaces/msg/sign_data.hpp"
 #include "interfaces/msg/motors_feedback.hpp"
 #include "interfaces/msg/reaction.hpp"
+#include "interfaces/msg/finish.hpp"
 #include "darknet_ros_msgs/msg/bounding_boxes.hpp"
 #include "darknet_ros_msgs/msg/object_count.hpp"
-
-
-
 
 #include "../include/odometry/odometry_node.h"
 
@@ -32,12 +30,15 @@ class odometry : public rclcpp::Node {
    
       subscription_motors_feedback_ = this->create_subscription<interfaces::msg::MotorsFeedback>(
         "motors_feedback", 10, std::bind(&odometry::motorsFeedbackCallback, this, _1));
+
+      subscription_finish_ = this->create_subscription<interfaces::msg::Finish>(
+        "finish", 10, std::bind(&odometry::finishCallback, this, _1));
       
       subscription_sign_data_ = this->create_subscription<darknet_ros_msgs::msg::BoundingBoxes>(
-        "/darknet_ros/bounding_boxes", 10, std::bind(&odometry::signDataCallback, this, _1));
+        "/darknet_ros/bounding_boxes", 1, std::bind(&odometry::signDataCallback, this, _1));
 
       subscription_number_detection_ = this->create_subscription<darknet_ros_msgs::msg::ObjectCount>(
-        "/darknet_ros/found_object", 10, std::bind(&odometry::countCallback, this, _1));
+        "/darknet_ros/found_object", 1, std::bind(&odometry::countCallback, this, _1));
     
       RCLCPP_INFO(this->get_logger(), "odometry_node READY");
     }
@@ -50,12 +51,14 @@ class odometry : public rclcpp::Node {
     //Subscriber
     rclcpp::Subscription<darknet_ros_msgs::msg::BoundingBoxes>::SharedPtr subscription_sign_data_;
     rclcpp::Subscription<interfaces::msg::MotorsFeedback>::SharedPtr subscription_motors_feedback_;
+    rclcpp::Subscription<interfaces::msg::Finish>::SharedPtr subscription_finish_;
     rclcpp::Subscription<darknet_ros_msgs::msg::ObjectCount>::SharedPtr subscription_number_detection_;
 
     float totalDistance = 0;
     string pastSignType = "f";
     float pastSignDist = 3000;
-    bool reacted = false;
+    bool start_reacting = false;
+    bool finished_reacting = true;
     int number_obj = 0;
 
 
@@ -76,13 +79,19 @@ class odometry : public rclcpp::Node {
       if ((pastSignDist - totalDistance ) > 0) {
         //Calculate distance traveled in total
         totalDistance += calculateDistance(motorsFeedback.left_rear_odometry, motorsFeedback.right_rear_odometry);
-      } else if (reacted == false){
-        reacted = true;
+      } else if (start_reacting == false){
+        start_reacting = true;
         reactMsg.react = true;
         reactMsg.class_id = pastSignType;
         publisher_reaction_->publish(reactMsg);   
         RCLCPP_INFO(this->get_logger(), "React TRUE");     
       }
+    }
+
+    void finishCallback(const interfaces::msg::Finish & finish){
+
+      finished_reacting = finish.ended;
+
     }
 
     void signDataCallback(const darknet_ros_msgs::msg::BoundingBoxes & signData){
@@ -92,12 +101,12 @@ class odometry : public rclcpp::Node {
 
       for (int i = 0; i<number_obj; i++){
         // Think about trouble to change the behavior of the vehicle after lose the vision of the 
-        if (signData.bounding_boxes[i].class_id != pastSignType && signData.bounding_boxes[i].class_id != "person") {
+        if (signData.bounding_boxes[i].class_id != pastSignType && signData.bounding_boxes[i].class_id != "person" && finished_reacting == true) {
         pastSignType = signData.bounding_boxes[i].class_id;
         pastSignDist = signData.bounding_boxes[i].distance;
         totalDistance = 0;
         reactMsg.react = false;
-        reacted = false;
+        finished_reacting = false;
         publisher_reaction_->publish(reactMsg);
         RCLCPP_INFO(this->get_logger(), "React FALSE");
       }
