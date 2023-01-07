@@ -30,6 +30,7 @@ class us_detection : public rclcpp::Node {
 
   private:
     int a = 0;
+    int nb_warning = 0;
 
     //Speed variable
     uint8_t last_us_detect = 0;
@@ -44,24 +45,36 @@ class us_detection : public rclcpp::Node {
       
       auto obstacleMsg = interfaces::msg::Obstacles();
 
-      if ((ultrasonic.front_center <= 50.0)){
-        obstacleMsg.us_detect = 1;
-      } 
-      else if((ultrasonic.front_left <= 20.0)){
-        obstacleMsg.us_detect = 1;
-      } 
-      else if((ultrasonic.front_right <= 20.0)){
-        obstacleMsg.us_detect = 1; 
-      }
-      else{
-        obstacleMsg.us_detect = 0;
+      //WARNING if strange value of the us_data (too far or negative value)
+      if(ultrasonic.front_center > 600 || ultrasonic.front_left > 600 || ultrasonic.front_right > 600 || ultrasonic.front_center < 0 || ultrasonic.front_left < 0 || ultrasonic.front_right < 0){
+        RCLCPP_WARN(this->get_logger(), "Warning : wrong us data");
+        nb_warning += 1;
       }
 
-      if (last_us_detect != obstacleMsg.us_detect) {   
-        last_us_detect = obstacleMsg.us_detect; 
-        publisher_obstacle_->publish(obstacleMsg);
-       }
-    }
+      //ERROR if strange value of the us_data (too far or negative value) 5 times in a row
+      else if(nb_warning >= 5){
+        RCLCPP_ERROR(this->get_logger(), "Error : wrong us data for too long");
+        obstacleMsg.us_detect = 2; //we add the case when there is a problem with the us sensors
+      }else{
+        nb_warning = 0;
+        if ((ultrasonic.front_center <= 50.0)){
+        obstacleMsg.us_detect = 1;
+        } 
+        else if((ultrasonic.front_left <= 20.0)){
+          obstacleMsg.us_detect = 1;
+        } 
+        else if((ultrasonic.front_right <= 20.0)){
+          obstacleMsg.us_detect = 1; 
+        }
+        else{
+          obstacleMsg.us_detect = 0;
+        }
+
+        if (last_us_detect != obstacleMsg.us_detect) {   
+          last_us_detect = obstacleMsg.us_detect; 
+          publisher_obstacle_->publish(obstacleMsg);
+        }
+      }
 };
 
 int main(int argc, char * argv[])

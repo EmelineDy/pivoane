@@ -1,5 +1,3 @@
-
-
 #include "rclcpp/rclcpp.hpp"
 
 #include <chrono>
@@ -78,7 +76,11 @@ class detection_behavior : public rclcpp::Node {
       auto speedMsg = interfaces::msg::RequiredSpeed();
       auto finishMsg = interfaces::msg::Finish();
 
-      if(us_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton à 50cm
+      if(us_detect == 2){ // Si les ultrasons renvoient une valeur etrange
+        last_speed = current_speed;
+        current_speed = 0;
+      }
+      else if(us_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton à 50cm
         if(current_speed != 0){
           RCLCPP_INFO(this->get_logger(), "pieton : vitesse de 0");
           speed_before_obs = current_speed;

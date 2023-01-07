@@ -60,6 +60,7 @@ class odometry : public rclcpp::Node {
     bool start_reacting = false;
     bool finished_reacting = true;
     int number_obj = 0;
+    int nb_warning = 0;
 
 
     //Calculate distance travelled by the car based on odometry
@@ -73,18 +74,31 @@ class odometry : public rclcpp::Node {
 
     void motorsFeedbackCallback(const interfaces::msg::MotorsFeedback & motorsFeedback){
 
-      auto reactMsg = interfaces::msg::Reaction();
+      //WARNING in case leftRearOdometry or rightRearOdometry are negative
+      if(motorsFeedback.left_rear_odometry < 0 || motorsFeedback.right_rear_odometry < 0 || motorsFeedback.left_rear_odometry > 2 || motorsFeedback.right_rear_odometry > 2){
+        RCLCPP_WARN(this->get_logger(), "Warning : wrong motors feedback");
+        nb_warning += 1;
+      }
 
-      //If the distance between the car and the last detected sign is null, the car can react
-      if ((pastSignDist - totalDistance ) > 0) {
-        //Calculate distance traveled in total
-        totalDistance += calculateDistance(motorsFeedback.left_rear_odometry, motorsFeedback.right_rear_odometry);
-      } else if (start_reacting == false){
-        start_reacting = true;
-        reactMsg.react = true;
-        reactMsg.class_id = pastSignType;
-        publisher_reaction_->publish(reactMsg);   
-        RCLCPP_INFO(this->get_logger(), "React TRUE");     
+      //ERROR in case leftRearOdometry or rightRearOdometry are negative 5 times in a row
+      else if(nb_warning >= 5){
+        RCLCPP_ERROR(this->get_logger(), "Error : wrong motors feedback for too long");
+      }else{
+        nb_warning = 0;
+        
+        auto reactMsg = interfaces::msg::Reaction();
+
+        //If the distance between the car and the last detected sign is null, the car can react
+        if ((pastSignDist - totalDistance ) > 0) {
+          //Calculate distance traveled in total
+          totalDistance += calculateDistance(motorsFeedback.left_rear_odometry, motorsFeedback.right_rear_odometry);
+        } else if (start_reacting == false){
+          start_reacting = true;
+          reactMsg.react = true;
+          reactMsg.class_id = pastSignType;
+          publisher_reaction_->publish(reactMsg);   
+          RCLCPP_INFO(this->get_logger(), "React TRUE");     
+        }
       }
     }
 
@@ -107,6 +121,7 @@ class odometry : public rclcpp::Node {
         totalDistance = 0;
         reactMsg.react = false;
         finished_reacting = false;
+        start_reacting = false;
         publisher_reaction_->publish(reactMsg);
         RCLCPP_INFO(this->get_logger(), "React FALSE");
       }
