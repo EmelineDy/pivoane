@@ -75,6 +75,7 @@ class us_detection : public rclcpp::Node {
           publisher_obstacle_->publish(obstacleMsg);
         }
       }
+    }
 };
 
 int main(int argc, char * argv[])
