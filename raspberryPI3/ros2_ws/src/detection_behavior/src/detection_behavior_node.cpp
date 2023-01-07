@@ -99,18 +99,6 @@ class detection_behavior : public rclcpp::Node {
             current_speed = speed_before_stop;
             //finish_react = true;
           }
-        } else if(ai_detect == "pass"){ //Si panneau cédez-le-passage
-          if(current_speed != 20){
-            RCLCPP_INFO(this->get_logger(), "panneau cedez le passage : vitesse de 20");
-            speed_before_yield = current_speed;
-          }
-          if(counter!=2000){  //ralentir pendant 2s
-            current_speed = 20;
-            counter ++;
-          }else{
-            current_speed = speed_before_yield;
-            //finish_react = true;
-          }
         } else if(ai_detect == "speedbump"){ //Si panneau dos d'âne
           if(current_speed != 30 && counter == 0){
             RCLCPP_INFO(this->get_logger(), "panneau dos ane : vitesse 30");
@@ -130,14 +118,8 @@ class detection_behavior : public rclcpp::Node {
           }
           current_speed = 36;
           //finish_react = true;
-        } else if (ai_detect == "endspeed") { //Si détection de panneau fin de limitation
-            if(last_speed != 0){
-              RCLCPP_INFO(this->get_logger(), "panneau fin limitation : vitesse 60");
-              current_speed = last_speed;
-            }
-            last_speed = 0;
-            //finish_react = true;
-        }else if (ai_detect == "speed50") { //Si détection de panneau vitesse haute
+        } else if (ai_detect == "speed50") { //Si détection de panneau vitesse haute
+          RCLCPP_INFO(this->get_logger(), "panneau vitesse haute : vitesse 60");
           last_speed = 0;
           current_speed = 60;
           //finish_react = true;
