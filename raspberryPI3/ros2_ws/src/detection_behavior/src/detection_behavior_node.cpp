@@ -7,7 +7,7 @@
 #include "interfaces/msg/obstacles.hpp"
 #include "interfaces/msg/required_speed.hpp"
 #include "interfaces/msg/reaction.hpp"
-#include "interfaces/msg/finish.hpp"
+//#include "interfaces/msg/finish.hpp"
 #include "interfaces/msg/sign_data.hpp"
 
 
@@ -26,7 +26,7 @@ class detection_behavior : public rclcpp::Node {
     {
       publisher_required_speed_ = this->create_publisher<interfaces::msg::RequiredSpeed>("required_speed", 10);
 
-      publisher_finish_ = this->create_publisher<interfaces::msg::Finish>("finish", 10);
+     // publisher_finish_ = this->create_publisher<interfaces::msg::Finish>("finish", 10);
 
       subscription_obstacles_ = this->create_subscription<interfaces::msg::Obstacles>(
         "obstacles", 10, std::bind(&detection_behavior::obsDataCallback, this, _1));
@@ -57,11 +57,11 @@ class detection_behavior : public rclcpp::Node {
     int counter = 0;
 
     bool start_react = false;
-    bool finish_react = true;
+    //bool finish_react = true;
 
     //Publisher
     rclcpp::Publisher<interfaces::msg::RequiredSpeed>::SharedPtr publisher_required_speed_;
-    rclcpp::Publisher<interfaces::msg::Finish>::SharedPtr publisher_finish_;
+    //rclcpp::Publisher<interfaces::msg::Finish>::SharedPtr publisher_finish_;
 
     //Subscriber
     rclcpp::Subscription<interfaces::msg::Obstacles>::SharedPtr subscription_obstacles_;
@@ -74,7 +74,7 @@ class detection_behavior : public rclcpp::Node {
     void updateSpeed(){
 
       auto speedMsg = interfaces::msg::RequiredSpeed();
-      auto finishMsg = interfaces::msg::Finish();
+      //auto finishMsg = interfaces::msg::Finish();
 
       if(us_detect == 2){ // Si les ultrasons renvoient une valeur etrange
         last_speed = current_speed;
@@ -97,7 +97,7 @@ class detection_behavior : public rclcpp::Node {
             counter ++;
           }else{
             current_speed = speed_before_stop;
-            finish_react = true;
+            //finish_react = true;
           }
         } else if(ai_detect == "pass"){ //Si panneau cédez-le-passage
           if(current_speed != 20){
@@ -109,7 +109,7 @@ class detection_behavior : public rclcpp::Node {
             counter ++;
           }else{
             current_speed = speed_before_yield;
-            finish_react = true;
+            //finish_react = true;
           }
         } else if(ai_detect == "speedbump"){ //Si panneau dos d'âne
           if(current_speed != 30 && counter == 0){
@@ -121,7 +121,7 @@ class detection_behavior : public rclcpp::Node {
             counter ++;
           }else{
             current_speed = speed_before_sb;
-            finish_react = true;
+            //finish_react = true;
           }
         } else if (ai_detect == "speed30") { //Si détection de panneau vitesse basse
           if(current_speed != 36){
@@ -129,18 +129,18 @@ class detection_behavior : public rclcpp::Node {
             last_speed = current_speed;
           }
           current_speed = 36;
-          finish_react = true;
+          //finish_react = true;
         } else if (ai_detect == "endspeed") { //Si détection de panneau fin de limitation
             if(last_speed != 0){
               RCLCPP_INFO(this->get_logger(), "panneau fin limitation : vitesse 60");
               current_speed = last_speed;
             }
             last_speed = 0;
-            finish_react = true;
+            //finish_react = true;
         }else if (ai_detect == "speed50") { //Si détection de panneau vitesse haute
           last_speed = 0;
           current_speed = 60;
-          finish_react = true;
+          //finish_react = true;
         }  
       } else if (us_detect == 0) {
         if(speed_before_obs != 0){
@@ -152,8 +152,8 @@ class detection_behavior : public rclcpp::Node {
       speedMsg.speed_rpm = current_speed; 
       publisher_required_speed_->publish(speedMsg);
 
-      finishMsg.ended = finish_react;
-      publisher_finish_->publish(finishMsg);
+      //finishMsg.ended = finish_react;
+      //publisher_finish_->publish(finishMsg);
       
     }
 
@@ -168,7 +168,7 @@ class detection_behavior : public rclcpp::Node {
     void reactionCallback(const interfaces::msg::Reaction & reaction) {
       if (start_react == false && reaction.react == true) {
         counter = 0;
-        finish_react = false;
+        //finish_react = false;
       }
       start_react = reaction.react;
 
