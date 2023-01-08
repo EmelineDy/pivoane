@@ -77,14 +77,15 @@ class detection_behavior : public rclcpp::Node {
 
       if(us_detect == 2){ // Si les ultrasons renvoient une valeur etrange
         last_speed = current_speed;
-        current_speed = 0;
+        speedMsg.speed_rpm = 0;
+        RCLCPP_INFO(this->get_logger(), "Stop due to US sensors");
       }
       else if(us_detect == 1){ //Si les capteurs US détectent un piéton à 50cm
         if(current_speed != 0){
           RCLCPP_INFO(this->get_logger(), "pieton : vitesse de 0");
           speed_before_obs = current_speed;
         }
-        current_speed = 0;
+        speedMsg.speed_rpm = 0;
       }  else if (start_reacting == true && speed_before_obs == 0) {
         if(ai_detect == "stop"){ //Si panneau stop
           if(current_speed != 0 && counter == 0){
@@ -92,10 +93,10 @@ class detection_behavior : public rclcpp::Node {
             speed_before_stop = current_speed;
           }
           if(counter!=2000){  //être à l'arrêt pendant 2s
-            current_speed = 0;
+            speedMsg.speed_rpm = 0;
             counter ++;
           }else{
-            current_speed = speed_before_stop;
+            speedMsg.speed_rpm = speed_before_stop;
             finishMsg.ended = true;
           }
         } else if(ai_detect == "speedbump"){ //Si panneau dos d'âne
@@ -104,30 +105,33 @@ class detection_behavior : public rclcpp::Node {
             speed_before_sb = current_speed;
           }
           if(counter!=2000){  //ralentir pendant 2s
-            current_speed = 30;
+            speedMsg.speed_rpm = 30;
             counter ++;
           }else{
-            current_speed = speed_before_sb;
+            speedMsg.speed_rpm = speed_before_sb;
             finishMsg.ended = true;
           }
         } else if (ai_detect == "speed30" && current_speed != 36) { //Si détection de panneau vitesse basse
             RCLCPP_INFO(this->get_logger(), "panneau vitesse basse : vitesse 36");
             last_speed = current_speed;
-            current_speed = 36;
+            speedMsg.speed_rpm = 36;
             finishMsg.ended = true;
         } else if (ai_detect == "speed50" && current_speed != 60) { //Si détection de panneau vitesse haute
           RCLCPP_INFO(this->get_logger(), "panneau vitesse haute : vitesse 60");
           last_speed = 0;
-          current_speed = 60;
+          speedMsg.speed_rpm = 60;
           finishMsg.ended = true;
         }  
       } else if (us_detect == 0 && speed_before_obs != 0) {
-        current_speed = speed_before_obs;
+        speedMsg.speed_rpm = speed_before_obs;
         speed_before_obs = 0;
         RCLCPP_INFO(this->get_logger(), "pieton : reprise vitesse %i", speed_before_obs);    
       } 
-      speedMsg.speed_rpm = current_speed; 
-      publisher_required_speed_->publish(speedMsg);
+
+      if (speedMsg.speed_rpm != current_speed) {
+        current_speed = speedMsg.speed_rpm; 
+        publisher_required_speed_->publish(speedMsg);
+      }
 
       if (finishMsg.ended != finished_reacting) {
         finished_reacting = finishMsg.ended;

@@ -74,16 +74,17 @@ class odometry : public rclcpp::Node {
 
     void motorsFeedbackCallback(const interfaces::msg::MotorsFeedback & motorsFeedback){
 
-      //WARNING in case leftRearOdometry or rightRearOdometry are negative
       if(motorsFeedback.left_rear_odometry < 0 || motorsFeedback.right_rear_odometry < 0 || motorsFeedback.left_rear_odometry > 2 || motorsFeedback.right_rear_odometry > 2){
-        RCLCPP_WARN(this->get_logger(), "Warning : wrong motors feedback");
-        nb_warning += 1;
+        if (nb_warning < 5) {
+          //WARNING in case leftRearOdometry or rightRearOdometry are negative
+          nb_warning += 1;
+          RCLCPP_WARN(this->get_logger(), "Warning n°%i: wrong motors feedback", nb_warning);
+        } else {
+          //ERROR in case leftRearOdometry or rightRearOdometry are negative 5 times in a row
+          RCLCPP_ERROR(this->get_logger(), "Error: wrong motors feedback for too long");
+        }
       }
-
-      //ERROR in case leftRearOdometry or rightRearOdometry are negative 5 times in a row
-      else if(nb_warning >= 5){
-        RCLCPP_ERROR(this->get_logger(), "Error : wrong motors feedback for too long");
-      }else{
+      else{
         nb_warning = 0;
         
         auto reactMsg = interfaces::msg::Reaction();
@@ -116,7 +117,7 @@ class odometry : public rclcpp::Node {
 
       for (int i = 0; i<number_obj; i++){
         // Think about trouble to change the behavior of the vehicle after lose the vision of the 
-        if (signData.bounding_boxes[i].class_id != pastSignType && signData.bounding_boxes[i].class_id != "person" && finished_reacting == true) {
+        if (signData.bounding_boxes[i].class_id != pastSignType && signData.bounding_boxes[i].class_id != "person" && (finished_reacting == true || signData.bounding_boxes[i].distance < pastSignDist - totalDistance)) {
         pastSignType = signData.bounding_boxes[i].class_id;
         pastSignDist = signData.bounding_boxes[i].distance;
         totalDistance = 0;
