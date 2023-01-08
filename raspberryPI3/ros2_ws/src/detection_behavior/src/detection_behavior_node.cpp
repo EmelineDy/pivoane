@@ -7,7 +7,7 @@
 #include "interfaces/msg/obstacles.hpp"
 #include "interfaces/msg/required_speed.hpp"
 #include "interfaces/msg/reaction.hpp"
-//#include "interfaces/msg/finish.hpp"
+#include "interfaces/msg/finish.hpp"
 #include "interfaces/msg/sign_data.hpp"
 
 
@@ -26,7 +26,7 @@ class detection_behavior : public rclcpp::Node {
     {
       publisher_required_speed_ = this->create_publisher<interfaces::msg::RequiredSpeed>("required_speed", 10);
 
-     // publisher_finish_ = this->create_publisher<interfaces::msg::Finish>("finish", 10);
+      publisher_finish_ = this->create_publisher<interfaces::msg::Finish>("finish", 10);
 
       subscription_obstacles_ = this->create_subscription<interfaces::msg::Obstacles>(
         "obstacles", 10, std::bind(&detection_behavior::obsDataCallback, this, _1));
@@ -44,7 +44,6 @@ class detection_behavior : public rclcpp::Node {
 
     //Speed variable
     uint8_t us_detect = 0;
-    uint8_t lidar_detect = 0;
     string ai_detect = "";
 
     int last_speed = 60;
@@ -56,12 +55,12 @@ class detection_behavior : public rclcpp::Node {
 
     int counter = 0;
 
-    bool start_react = false;
-    //bool finish_react = true;
+    bool start_reacting = false;
+    bool finished_reacting = true;
 
     //Publisher
     rclcpp::Publisher<interfaces::msg::RequiredSpeed>::SharedPtr publisher_required_speed_;
-    //rclcpp::Publisher<interfaces::msg::Finish>::SharedPtr publisher_finish_;
+    rclcpp::Publisher<interfaces::msg::Finish>::SharedPtr publisher_finish_;
 
     //Subscriber
     rclcpp::Subscription<interfaces::msg::Obstacles>::SharedPtr subscription_obstacles_;
@@ -74,19 +73,19 @@ class detection_behavior : public rclcpp::Node {
     void updateSpeed(){
 
       auto speedMsg = interfaces::msg::RequiredSpeed();
-      //auto finishMsg = interfaces::msg::Finish();
+      auto finishMsg = interfaces::msg::Finish();
 
       if(us_detect == 2){ // Si les ultrasons renvoient une valeur etrange
         last_speed = current_speed;
         current_speed = 0;
       }
-      else if(us_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton à 50cm
+      else if(us_detect == 1){ //Si les capteurs US détectent un piéton à 50cm
         if(current_speed != 0){
           RCLCPP_INFO(this->get_logger(), "pieton : vitesse de 0");
           speed_before_obs = current_speed;
         }
         current_speed = 0;
-      }  else if (start_react == true && speed_before_obs == 0) {
+      }  else if (start_reacting == true && speed_before_obs == 0) {
         if(ai_detect == "stop"){ //Si panneau stop
           if(current_speed != 0 && counter == 0){
             RCLCPP_INFO(this->get_logger(), "panneau stop : vitesse de 0");
@@ -97,7 +96,7 @@ class detection_behavior : public rclcpp::Node {
             counter ++;
           }else{
             current_speed = speed_before_stop;
-            //finish_react = true;
+            finishMsg.ended = true;
           }
         } else if(ai_detect == "speedbump"){ //Si panneau dos d'âne
           if(current_speed != 30 && counter == 0){
@@ -109,55 +108,48 @@ class detection_behavior : public rclcpp::Node {
             counter ++;
           }else{
             current_speed = speed_before_sb;
-            //finish_react = true;
+            finishMsg.ended = true;
           }
-        } else if (ai_detect == "speed30") { //Si détection de panneau vitesse basse
-          if(current_speed != 36){
+        } else if (ai_detect == "speed30" && current_speed != 36) { //Si détection de panneau vitesse basse
             RCLCPP_INFO(this->get_logger(), "panneau vitesse basse : vitesse 36");
             last_speed = current_speed;
-          }
-          current_speed = 36;
-          //finish_react = true;
-        } else if (ai_detect == "speed50") { //Si détection de panneau vitesse haute
+            current_speed = 36;
+            finishMsg.ended = true;
+        } else if (ai_detect == "speed50" && current_speed != 60) { //Si détection de panneau vitesse haute
           RCLCPP_INFO(this->get_logger(), "panneau vitesse haute : vitesse 60");
           last_speed = 0;
           current_speed = 60;
-          //finish_react = true;
+          finishMsg.ended = true;
         }  
-      } else if (us_detect == 0) {
-        if(speed_before_obs != 0){
-          current_speed = speed_before_obs;
-          speed_before_obs = 0;
-          RCLCPP_INFO(this->get_logger(), "pieton : reprise vitesse %i", speed_before_obs);
-          }      
+      } else if (us_detect == 0 && speed_before_obs != 0) {
+        current_speed = speed_before_obs;
+        speed_before_obs = 0;
+        RCLCPP_INFO(this->get_logger(), "pieton : reprise vitesse %i", speed_before_obs);    
       } 
       speedMsg.speed_rpm = current_speed; 
       publisher_required_speed_->publish(speedMsg);
 
-      //finishMsg.ended = finish_react;
-      //publisher_finish_->publish(finishMsg);
+      if (finishMsg.ended != finished_reacting) {
+        finished_reacting = finishMsg.ended;
+        publisher_finish_->publish(finishMsg);
+      }
       
     }
 
     void obsDataCallback(const interfaces::msg::Obstacles & obstacles){
 
-      if (us_detect != obstacles.us_detect || lidar_detect != obstacles.lidar_detect) {
+      if (us_detect != obstacles.us_detect) {
         us_detect = obstacles.us_detect;
-        lidar_detect = obstacles.lidar_detect;
       }  
     }
 
     void reactionCallback(const interfaces::msg::Reaction & reaction) {
-      if (start_react == false && reaction.react == true) {
+      if (start_reacting == false && reaction.react == true) {
         counter = 0;
-        //finish_react = false;
-      }
-      start_react = reaction.react;
-
-      if (ai_detect != reaction.class_id) {
+        finished_reacting = false;
         ai_detect = reaction.class_id; 
-        counter = 0;
-      } 
+      }
+      start_reacting = reaction.react;
     }
 };
 

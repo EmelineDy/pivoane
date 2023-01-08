@@ -25,6 +25,7 @@ set(msg_files
   "msg/RequiredSpeed.msg"
   "msg/SignData.msg"
   "msg/Reaction.msg"
+  "msg/Finish.msg"
 )
 
 rosidl_generate_interfaces(${PROJECT_NAME}
