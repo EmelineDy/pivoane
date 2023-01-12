@@ -81,7 +81,7 @@ class odometry : public rclcpp::Node {
         //WARNING in case leftRearOdometry or rightRearOdometry are negative
         RCLCPP_WARN(this->get_logger(), "Warning : wrong motors feedback");
         nb_warning += 1;
-      } else if {
+      } else {
         nb_warning = 0;
         
         auto reactMsg = interfaces::msg::Reaction();
@@ -110,14 +110,14 @@ class odometry : public rclcpp::Node {
       for (int i = 0; i<number_obj; i++){
         // Think about trouble to change the behavior of the vehicle after lose the vision of the 
         if (signData.bounding_boxes[i].class_id != pastSignType && signData.bounding_boxes[i].class_id != "person") {
-        pastSignType = signData.bounding_boxes[i].class_id;
-        pastSignDist = signData.bounding_boxes[i].distance;
-        totalDistance = 0;
-        reactMsg.react = false;
-        start_reacting = false;
-        publisher_reaction_->publish(reactMsg);
-        RCLCPP_INFO(this->get_logger(), "React FALSE");
-      }
+          pastSignType = signData.bounding_boxes[i].class_id;
+          pastSignDist = signData.bounding_boxes[i].distance;
+          totalDistance = 0;
+          reactMsg.react = false;
+          start_reacting = false;
+          publisher_reaction_->publish(reactMsg);
+          RCLCPP_INFO(this->get_logger(), "React FALSE");
+        }
       }
       
     }
