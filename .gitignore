@@ -55,5 +55,8 @@ Myclasses_train/
 Myclasses_test/
 label/
 images/
-!*_final.weights
-!*_best.weights
+bad.list
+#!*_final.weights
+#!*_best.weights
+#yolov4-tiny.conv.29
+#yolov7-tiny.conv.87

@@ -1,0 +1,16 @@
+darknet_ros:
+  ros__parameters:
+    yolo_model:
+      config_file:
+        name: yolov7-tiny-myClasses.cfg
+      weight_file:
+        name: yolov7-tiny-myClasses_final.weights
+      threshold:
+        value: 0.5
+      detection_classes:
+        names:
+          - person
+          - stop
+          - speed50
+          - speed30
+          - speedbump
