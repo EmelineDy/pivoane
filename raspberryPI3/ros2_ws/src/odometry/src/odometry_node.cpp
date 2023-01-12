@@ -74,16 +74,14 @@ class odometry : public rclcpp::Node {
 
     void motorsFeedbackCallback(const interfaces::msg::MotorsFeedback & motorsFeedback){
 
-      //WARNING in case leftRearOdometry or rightRearOdometry are negative
-      if(motorsFeedback.left_rear_odometry < 0 || motorsFeedback.right_rear_odometry < 0 || motorsFeedback.left_rear_odometry > 2 || motorsFeedback.right_rear_odometry > 2){
+      //ERROR in case leftRearOdometry or rightRearOdometry are negative 5 times in a row
+      if(nb_warning >= 5){
+        RCLCPP_ERROR(this->get_logger(), "Error : wrong motors feedback for too long");
+      } else if(motorsFeedback.left_rear_odometry < 0 || motorsFeedback.right_rear_odometry < 0 || motorsFeedback.left_rear_odometry > 2 || motorsFeedback.right_rear_odometry > 2){
+        //WARNING in case leftRearOdometry or rightRearOdometry are negative
         RCLCPP_WARN(this->get_logger(), "Warning : wrong motors feedback");
         nb_warning += 1;
-      }
-
-      //ERROR in case leftRearOdometry or rightRearOdometry are negative 5 times in a row
-      else if(nb_warning >= 5){
-        RCLCPP_ERROR(this->get_logger(), "Error : wrong motors feedback for too long");
-      }else{
+      } else if {
         nb_warning = 0;
         
         auto reactMsg = interfaces::msg::Reaction();
@@ -98,17 +96,11 @@ class odometry : public rclcpp::Node {
           reactMsg.class_id = pastSignType;
           publisher_reaction_->publish(reactMsg);   
           RCLCPP_INFO(this->get_logger(), "React TRUE");     
+        } else {
+          RCLCPP_INFO(this->get_logger(), "Started Reacting");
         }
       }
     }
-
-/*
-    void finishCallback(const interfaces::msg::Finish & finish){
-
-      finished_reacting = finish.ended;
-
-    }
-    */
 
     void signDataCallback(const darknet_ros_msgs::msg::BoundingBoxes & signData){
 
@@ -122,7 +114,6 @@ class odometry : public rclcpp::Node {
         pastSignDist = signData.bounding_boxes[i].distance;
         totalDistance = 0;
         reactMsg.react = false;
-        //finished_reacting = false;
         start_reacting = false;
         publisher_reaction_->publish(reactMsg);
         RCLCPP_INFO(this->get_logger(), "React FALSE");
