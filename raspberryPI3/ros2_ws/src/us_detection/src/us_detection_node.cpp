@@ -45,19 +45,19 @@ class us_detection : public rclcpp::Node {
       
       auto obstacleMsg = interfaces::msg::Obstacles();
 
-      //WARNING if strange value of the us_data (too far or negative value)
-      if(ultrasonic.front_center > 600 || ultrasonic.front_left > 600 || ultrasonic.front_right > 600 || ultrasonic.front_center < 0 || ultrasonic.front_left < 0 || ultrasonic.front_right < 0){
-        RCLCPP_WARN(this->get_logger(), "Warning : wrong us data");
-        nb_warning += 1;
-      }
+      
 
       //ERROR if strange value of the us_data (too far or negative value) 5 times in a row
-      else if(nb_warning >= 5){
+      if(nb_warning >= 5){
         RCLCPP_ERROR(this->get_logger(), "Error : wrong us data for too long");
         obstacleMsg.us_detect = 2; //we add the case when there is a problem with the us sensors
-      }else{
+      }//WARNING if strange value of the us_data (too far or negative value)
+       else if(ultrasonic.front_center > 600 || ultrasonic.front_left > 600 || ultrasonic.front_right > 600 || ultrasonic.front_center < 0 || ultrasonic.front_left < 0 || ultrasonic.front_right < 0){
+        RCLCPP_WARN(this->get_logger(), "Warning : wrong us data");
+        nb_warning += 1;
+      } else{
         nb_warning = 0;
-        if ((ultrasonic.front_center <= 50.0)){
+        if ((ultrasonic.front_center <= 75.0)){
         obstacleMsg.us_detect = 1;
         } 
         else if((ultrasonic.front_left <= 20.0)){
