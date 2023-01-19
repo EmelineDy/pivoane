@@ -721,11 +721,11 @@ void *YoloObjectDetector::publishInThread()
     msg.count = num;
     objectPublisher_->publish(msg);
 
+    darknet_ros_msgs::msg::BoundingBox closePersonBoundingBox;
+    darknet_ros_msgs::msg::BoundingBox closePanelBoundingBox;
     for (int i = 0; i < numClasses_; i++) {
       if (rosBoxCounter_[i] > 0) {
         darknet_ros_msgs::msg::BoundingBox boundingBox;
-        darknet_ros_msgs::msg::BoundingBox closePersonBoundingBox;
-        darknet_ros_msgs::msg::BoundingBox closePanelBoundingBox;
         float lowerPersonDistance = 1e6;
         float lowerPanelDistance = 1e6;
 
@@ -755,7 +755,7 @@ void *YoloObjectDetector::publishInThread()
 
           if (classLabels_[i] == "person"){
             if (lowerPersonDistance < boundingBox.distance){
-              lowerPersonDistance = boundingBox.distance
+              lowerPersonDistance = boundingBox.distance;
               closePersonBoundingBox.class_id = classLabels_[i];
               closePersonBoundingBox.id = i;
               closePersonBoundingBox.probability = rosBoxes_[i][j].prob;
@@ -768,7 +768,7 @@ void *YoloObjectDetector::publishInThread()
             }
           }else{
             if (lowerPersonDistance < boundingBox.distance){
-              lowerPersonDistance = boundingBox.distance
+              lowerPersonDistance = boundingBox.distance;
               closePanelBoundingBox.class_id = classLabels_[i];
               closePanelBoundingBox.id = i;
               closePanelBoundingBox.probability = rosBoxes_[i][j].prob;
@@ -783,8 +783,10 @@ void *YoloObjectDetector::publishInThread()
 
           boundingBoxesResults_.bounding_boxes.push_back(boundingBox);
         }
-        closeBoundingBoxesResults_.close_bounding_boxes.push_back(closePanelBoundingBox);
-        closeBoundingBoxesResults_.close_bounding_boxes.push_back(closePersonBoundingBox);
+        //closeBoundingBoxesResults_.close_bounding_boxes.push_back(closePanelBoundingBox);
+        //closeBoundingBoxesResults_.close_bounding_boxes.push_back(closePersonBoundingBox);
+        closeBoundingBoxesResults_.close_bounding_boxes[0]=closePanelBoundingBox;
+        closeBoundingBoxesResults_.close_bounding_boxes[1]=closePersonBoundingBox;
       }
     }
     boundingBoxesResults_.header.stamp = this->now();
@@ -808,12 +810,12 @@ void *YoloObjectDetector::publishInThread()
 
     result->id = buffId_[0];
     result->bounding_boxes = boundingBoxesResults_;
-    result->close_bounding_boxes = closeBoundingBoxesResults_;
+    //result->close_bounding_boxes = closeBoundingBoxesResults_;
     goal_handle_->succeed(result);
     action_active_ = false;
   }
   boundingBoxesResults_.bounding_boxes.clear();
-  closeBoundingBoxesResults_.close_bounding_boxes.clear();
+  //closeBoundingBoxesResults_.close_bounding_boxes.clear();
   for (int i = 0; i < numClasses_; i++) {
     rosBoxes_[i].clear();
     rosBoxCounter_[i] = 0;

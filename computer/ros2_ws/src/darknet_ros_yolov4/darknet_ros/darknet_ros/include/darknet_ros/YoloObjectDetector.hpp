@@ -37,6 +37,7 @@
 
 // darknet_ros_msgs
 #include "darknet_ros_msgs/msg/bounding_boxes.hpp"
+#include "darknet_ros_msgs/msg/close_bounding_boxes.hpp"
 #include "darknet_ros_msgs/msg/bounding_box.hpp"
 #include "darknet_ros_msgs/msg/object_count.hpp"
 #include "darknet_ros_msgs/action/check_for_objects.hpp"
@@ -176,11 +177,13 @@ class YoloObjectDetector : public rclcpp::Node
   image_transport::Subscriber imageSubscriber_;
   rclcpp::Publisher<darknet_ros_msgs::msg::ObjectCount>::SharedPtr objectPublisher_;
   rclcpp::Publisher<darknet_ros_msgs::msg::BoundingBoxes>::SharedPtr boundingBoxesPublisher_;
+  rclcpp::Publisher<darknet_ros_msgs::msg::CloseBoundingBoxes>::SharedPtr closeBoundingBoxesPublisher_;
 
   //! Detected objects.
   std::vector<std::vector<RosBox_> > rosBoxes_;
   std::vector<int> rosBoxCounter_;
   darknet_ros_msgs::msg::BoundingBoxes boundingBoxesResults_;
+  darknet_ros_msgs::msg::CloseBoundingBoxes closeBoundingBoxesResults_;
 
   //! Camera related parameters.
   int frameWidth_;
