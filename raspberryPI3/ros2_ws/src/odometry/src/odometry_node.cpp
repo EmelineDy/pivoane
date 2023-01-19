@@ -100,9 +100,9 @@ class odometry : public rclcpp::Node {
       auto reactMsg = interfaces::msg::Reaction();
 
         // Think about trouble to change the behavior of the vehicle after lose the vision of the 
-      if (signData.bounding_boxes[0].class_id != pastSignType  && signData.bounding_boxes[0].class_id != "empty") {
-        pastSignType = signData.bounding_boxes[0].class_id;
-        pastSignDist = signData.bounding_boxes[0].distance;
+      if (signData.close_bounding_boxes[0].class_id != pastSignType  && signData.close_bounding_boxes[0].class_id != "empty") {
+        pastSignType = signData.close_bounding_boxes[0].class_id;
+        pastSignDist = signData.close_bounding_boxes[0].distance;
         totalDistance = 0;
         reactMsg.react = false;
         start_reacting = false;
@@ -110,7 +110,7 @@ class odometry : public rclcpp::Node {
         RCLCPP_INFO(this->get_logger(), "React FALSE");
         }
 
-      if (signData.bounding_boxes[1].class_id != "empty") {
+      if (signData.close_bounding_boxes[1].class_id != "empty") {
         RCLCPP_INFO(this->get_logger(), "Pedestrian detected");
       }      
     }
