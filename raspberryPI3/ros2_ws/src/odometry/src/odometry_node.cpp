@@ -33,7 +33,7 @@ class odometry : public rclcpp::Node {
       //  "finish", 10, std::bind(&odometry::finishCallback, this, _1));
       
       subscription_sign_data_ = this->create_subscription<darknet_ros_msgs::msg::CloseBoundingBoxes>(
-        "/darknet_ros/close_bounding_boxes", 1, std::bind(&odometry::signDataCallback, this, _1));
+        "close_bounding_boxes", 1, std::bind(&odometry::signDataCallback, this, _1));
     
       RCLCPP_INFO(this->get_logger(), "odometry_node READY");
     }
@@ -89,8 +89,6 @@ class odometry : public rclcpp::Node {
           reactMsg.class_id = pastSignType;
           publisher_reaction_->publish(reactMsg);   
           RCLCPP_INFO(this->get_logger(), "React TRUE");     
-        } else {
-          RCLCPP_INFO(this->get_logger(), "Started Reacting");
         }
       }
     }
@@ -110,9 +108,9 @@ class odometry : public rclcpp::Node {
         RCLCPP_INFO(this->get_logger(), "React FALSE");
         }
 
-      if (signData.close_bounding_boxes[1].class_id != "empty") {
-        RCLCPP_INFO(this->get_logger(), "Pedestrian detected");
-      }      
+      //if (signData.close_bounding_boxes[1].class_id != "empty") {
+        //RCLCPP_INFO(this->get_logger(), "Pedestrian detected");
+      //}      
     }
 
 };
