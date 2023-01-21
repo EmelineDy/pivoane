@@ -56,8 +56,6 @@ class detection_behavior : public rclcpp::Node {
 
     int counter = 0;
 
-    bool start_react = false;
-    //bool finish_react = true;
 
     //Publisher
     rclcpp::Publisher<interfaces::msg::RequiredSpeed>::SharedPtr publisher_required_speed_;
@@ -86,7 +84,7 @@ class detection_behavior : public rclcpp::Node {
           speed_before_obs = current_speed;
         }
         current_speed = 0;
-      }  else if (start_react == true && speed_before_obs == 0) {
+      }  else if (speed_before_obs == 0) {
         if(ai_detect == "stop"){ //Si panneau stop
           if(current_speed != 0 && counter == 0){
             RCLCPP_INFO(this->get_logger(), "panneau stop : vitesse de 0");
@@ -97,7 +95,6 @@ class detection_behavior : public rclcpp::Node {
             counter ++;
           }else{
             current_speed = speed_before_stop;
-            //finish_react = true;
           }
         } else if(ai_detect == "speedbump"){ //Si panneau dos d'âne
           if(current_speed != 30 && counter == 0){
@@ -109,7 +106,6 @@ class detection_behavior : public rclcpp::Node {
             counter ++;
           }else{
             current_speed = speed_before_sb;
-            //finish_react = true;
           }
         } else if (ai_detect == "speed30") { //Si détection de panneau vitesse basse
           if(current_speed != 36){
@@ -117,12 +113,9 @@ class detection_behavior : public rclcpp::Node {
             last_speed = current_speed;
           }
           current_speed = 36;
-          //finish_react = true;
         } else if (ai_detect == "speed50") { //Si détection de panneau vitesse haute
-          RCLCPP_INFO(this->get_logger(), "panneau vitesse haute : vitesse 60");
           last_speed = 0;
           current_speed = 60;
-          //finish_react = true;
         }  
       } else if (us_detect == 0) {
         if(speed_before_obs != 0){
@@ -133,10 +126,6 @@ class detection_behavior : public rclcpp::Node {
       } 
       speedMsg.speed_rpm = current_speed; 
       publisher_required_speed_->publish(speedMsg);
-
-      //finishMsg.ended = finish_react;
-      //publisher_finish_->publish(finishMsg);
-      
     }
 
     void obsDataCallback(const interfaces::msg::Obstacles & obstacles){
@@ -148,16 +137,8 @@ class detection_behavior : public rclcpp::Node {
     }
 
     void reactionCallback(const interfaces::msg::Reaction & reaction) {
-      if (start_react == false && reaction.react == true) {
-        counter = 0;
-        //finish_react = false;
-      }
-      start_react = reaction.react;
-
-      if (ai_detect != reaction.class_id) {
-        ai_detect = reaction.class_id; 
-        counter = 0;
-      } 
+      counter = 0;
+      ai_detect = reaction.class_id; 
     }
 };
 
