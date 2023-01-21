@@ -7,7 +7,6 @@
 #include <string>
 
 #include "interfaces/msg/sign_data.hpp"
-#include "interfaces/msg/motors_feedback.hpp"
 #include "interfaces/msg/reaction.hpp"
 #include "darknet_ros_msgs/msg/close_bounding_boxes.hpp"
 
@@ -26,12 +25,7 @@ class odometry : public rclcpp::Node {
     {
       publisher_reaction_ = this->create_publisher<interfaces::msg::Reaction>("reaction", 10);
    
-      subscription_motors_feedback_ = this->create_subscription<interfaces::msg::MotorsFeedback>(
-        "motors_feedback", 10, std::bind(&odometry::motorsFeedbackCallback, this, _1));
-
-      //subscription_finish_ = this->create_subscription<interfaces::msg::Finish>(
-      //  "finish", 10, std::bind(&odometry::finishCallback, this, _1));
-      
+     
       subscription_sign_data_ = this->create_subscription<darknet_ros_msgs::msg::CloseBoundingBoxes>(
         "close_bounding_boxes", 1, std::bind(&odometry::signDataCallback, this, _1));
     
@@ -45,8 +39,6 @@ class odometry : public rclcpp::Node {
 
     //Subscriber
     rclcpp::Subscription<darknet_ros_msgs::msg::CloseBoundingBoxes>::SharedPtr subscription_sign_data_;
-    rclcpp::Subscription<interfaces::msg::MotorsFeedback>::SharedPtr subscription_motors_feedback_;
-    //rclcpp::Subscription<interfaces::msg::Finish>::SharedPtr subscription_finish_;
 
     float totalDistance = 0;
     string pastSignType = "f";
@@ -78,71 +70,43 @@ class odometry : public rclcpp::Node {
     }
 
 
-    void motorsFeedbackCallback(const interfaces::msg::MotorsFeedback & motorsFeedback){
-      int x = 0;
-      /*
-      //ERROR in case leftRearOdometry or rightRearOdometry are negative 5 times in a row
-      if(nb_warning >= 5){
-        RCLCPP_ERROR(this->get_logger(), "Error : wrong motors feedback for too long");
-      } else if(motorsFeedback.left_rear_odometry < 0 || motorsFeedback.right_rear_odometry < 0 || motorsFeedback.left_rear_odometry > 2 || motorsFeedback.right_rear_odometry > 2){
-        //WARNING in case leftRearOdometry or rightRearOdometry are negative
-        RCLCPP_WARN(this->get_logger(), "Warning : wrong motors feedback");
-        nb_warning += 1;
-      } else {
-        nb_warning = 0;
-        
-        auto reactMsg = interfaces::msg::Reaction();
-
-        //If the distance between the car and the last detected sign is null, the car can react
-        if ((pastSignDist - totalDistance ) > 0) {
-          //Calculate distance traveled in total
-          totalDistance += calculateDistance(motorsFeedback.left_rear_odometry, motorsFeedback.right_rear_odometry);
-        } else if (start_reacting == false){
-          start_reacting = true;
-          reactMsg.react = true;
-          reactMsg.class_id = pastSignType;
-          publisher_reaction_->publish(reactMsg);   
-          RCLCPP_INFO(this->get_logger(), "React TRUE");
-        }
-      }
-      */
-    }
-
     void signDataCallback(const darknet_ros_msgs::msg::CloseBoundingBoxes & signData){
 
       auto reactMsg = interfaces::msg::Reaction();
 
       if (signData.close_bounding_boxes[0].class_id == "stop") {
-        count_stop = min (count_stop++, max_count);
-        count_30 = max (count_30--, 0);
-        count_50 = max (count_50--, 0);
-        count_bump = max (count_bump--, 0);
+        count_stop = min (count_stop + 1, max_count);
+        count_30 = max (count_30 - 1, 0);
+        count_50 = max (count_50 - 1, 0);
+        count_bump = max (count_bump - 1, 0);
       } else if (signData.close_bounding_boxes[0].class_id == "speedbump") {
-        count_bump = min (count_bump++, max_count);          
-        count_30 = max (count_30--, 0);
-        count_50 = max (count_50--, 0);
-        count_stop = max (count_stop--, 0);
+        count_bump = min (count_bump + 1, max_count);          
+        count_30 = max (count_30 - 1, 0);
+        count_50 = max (count_50 - 1, 0);
+        count_stop = max (count_stop - 1, 0);
       } else if (signData.close_bounding_boxes[0].class_id == "speed30") {
-        count_30 = min (count_30++, max_count);
-        count_stop = max (count_stop--, 0);
-        count_50 = max (count_50--, 0);
-        count_bump = max (count_bump--, 0);
+        count_30 = min (count_30 + 1, max_count);
+        count_stop = max (count_stop - 1, 0);
+        count_50 = max (count_50 - 1, 0);
+        count_bump = max (count_bump - 1, 0);
       } else if (signData.close_bounding_boxes[0].class_id == "speed50") {
-        count_50 = min (count_50++, max_count);
-        count_30 = max (count_30--, 0);
-        count_stop = max (count_stop--, 0);
-        count_bump = max (count_bump--, 0);
+        count_50 = min (count_50 + 1, max_count);
+        count_30 = max (count_30 - 1, 0);
+        count_stop = max (count_stop - 1, 0);
+        count_bump = max (count_bump - 1, 0);
       } else {
-        count_50 = max (count_50--, 0);
-        count_30 = max (count_30--, 0);
-        count_stop = max (count_stop--, 0);
-        count_bump = max (count_bump--, 0);
+        count_50 = max (count_50 - 1, 0);
+        count_30 = max (count_30 - 1, 0);
+        count_stop = max (count_stop - 1, 0);
+        count_bump = max (count_bump - 1, 0);
       }
 
       counts[0] = count_stop;
       counts[1] = count_30;
       counts[2] = count_50;
       counts[3] = count_bump;
+
+      RCLCPP_INFO(this->get_logger(), "stop %i, 30 %i, 50 %i, bump %i", counts[0], counts[1], counts[2], counts[3]);
 
       for (int i = 0; i>4; i++) {
         if (counts[i] > max_detect) {
