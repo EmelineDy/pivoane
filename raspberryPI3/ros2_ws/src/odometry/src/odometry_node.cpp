@@ -128,24 +128,7 @@ class odometry : public rclcpp::Node {
           sure[i] = 0;
         }
       }
-
-
-
-      // Think about trouble to change the behavior of the vehicle after lose the vision of the 
-      /*
-    if (signData.close_bounding_boxes[0].class_id != pastSignType  && signData.close_bounding_boxes[0].class_id != "empty") {
-      pastSignType = signData.close_bounding_boxes[0].class_id;
-      pastSignDist = signData.close_bounding_boxes[0].distance;
-      totalDistance = 0;
-      reactMsg.react = false;
-      start_reacting = false;
-      publisher_reaction_->publish(reactMsg);
-      RCLCPP_INFO(this->get_logger(), "React FALSE");
-      }
-      */
-      
-
-  
+      max_detect = 0;
     }
 
 };
