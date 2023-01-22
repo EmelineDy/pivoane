@@ -114,7 +114,7 @@ class tracking : public rclcpp::Node {
         if (sure[j] == 1 && counts[j] <= 10) {
           reactMsg.class_id = label[j];
           publisher_reaction_->publish(reactMsg);
-          RCLCPP_INFO(this->get_logger(), "React TRUE");
+          RCLCPP_INFO(this->get_logger(), "React TRUE to %s", label[j].c_str());
           sure[j] = 0;
         }
       }
