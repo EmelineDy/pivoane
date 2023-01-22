@@ -51,8 +51,8 @@ class odometry : public rclcpp::Node {
     int count_50 = 0;
     int count_bump = 0; 
 
-    int max_count = 30;
-    int threshold = 20;
+    int max_count = 60;
+    int threshold = 40;
     int counts[4]= {count_stop, count_30, count_50, count_bump};
     int index = -1;
     int max_detect = 0;
@@ -115,15 +115,12 @@ class odometry : public rclcpp::Node {
         }
       }
 
-      RCLCPP_INFO(this->get_logger(), "Most probable is %i with count = %i", index, max_detect);
-
       if (max_detect >= threshold) {
         sure[index] = 1;
-        RCLCPP_INFO(this->get_logger(), "threshold reached for %i", index);
       }
 
       for (int j = 0; j<4; j++) {
-        if (sure[j] == 1 && counts[j] <= 5) {
+        if (sure[j] == 1 && counts[j] <= 10) {
           reactMsg.class_id = label[j];
           publisher_reaction_->publish(reactMsg);
           RCLCPP_INFO(this->get_logger(), "React TRUE");
