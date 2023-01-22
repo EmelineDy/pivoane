@@ -61,6 +61,7 @@ class odometry : public rclcpp::Node {
 
 
     //Calculate distance travelled by the car based on odometry
+    /*
     float calculateDistance(int leftRearOdometry, int rightRearOdometry){
       float distanceLeft = (leftRearOdometry * 3.141592 * (WHEEL/10.0)) / 36.0;
       float distanceRight = (rightRearOdometry * 3.141592 * (WHEEL/10.0)) / 36.0;
@@ -68,6 +69,7 @@ class odometry : public rclcpp::Node {
       float distance = (distanceLeft + distanceRight)/2.0;
       return distance;
     }
+    */
 
 
     void signDataCallback(const darknet_ros_msgs::msg::CloseBoundingBoxes & signData){
@@ -106,29 +108,32 @@ class odometry : public rclcpp::Node {
       counts[2] = count_50;
       counts[3] = count_bump;
 
-      RCLCPP_INFO(this->get_logger(), "stop %i, 30 %i, 50 %i, bump %i", counts[0], counts[1], counts[2], counts[3]);
-
-      for (int i = 0; i>4; i++) {
+      for (int i = 0; i<4; i++) {
         if (counts[i] > max_detect) {
           max_detect = counts[i];
           index = i;
         }
       }
 
+      RCLCPP_INFO(this->get_logger(), "Most probable is %i with count = %i", index, max_detect);
+
       if (max_detect >= threshold) {
         sure[index] = 1;
+        RCLCPP_INFO(this->get_logger(), "threshold reached for %i", index);
       }
 
-      for (int i = 0; i>4; i++) {
-        if (sure[i] == 1 && counts[i] <= 5) {
-          reactMsg.class_id = label[i];
+      for (int j = 0; j<4; j++) {
+        if (sure[j] == 1 && counts[j] <= 5) {
+          reactMsg.class_id = label[j];
           publisher_reaction_->publish(reactMsg);
           RCLCPP_INFO(this->get_logger(), "React TRUE");
 
-          sure[i] = 0;
+          sure[j] = 0;
         }
       }
+
       max_detect = 0;
+      index = 0;
     }
 
 };
