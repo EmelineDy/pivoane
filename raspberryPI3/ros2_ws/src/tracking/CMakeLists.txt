@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(odometry)
+project(tracking)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -11,17 +11,17 @@ find_package(rclcpp REQUIRED)
 find_package(interfaces REQUIRED)
 find_package(darknet_ros_msgs REQUIRED)
 
-add_executable(odometry_node src/odometry_node.cpp)
+add_executable(tracking_node src/tracking_node.cpp)
 
-ament_target_dependencies(odometry_node rclcpp interfaces darknet_ros_msgs)
+ament_target_dependencies(tracking_node rclcpp interfaces darknet_ros_msgs)
 ament_export_include_directories(include)
 
-target_include_directories(odometry_node PUBLIC
+target_include_directories(tracking_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_compile_features(odometry_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(tracking_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
-install(TARGETS odometry_node
+install(TARGETS tracking_node
   DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)

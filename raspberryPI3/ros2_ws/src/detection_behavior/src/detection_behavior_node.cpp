@@ -18,8 +18,6 @@ the message giving the value of the speed that the car needs to reach according 
 using namespace std;
 using placeholders::_1;
 
-/* This example creates a subclass of Node and uses std::bind() to register a
- * member function as a callback from the timer. */
 
 class detection_behavior : public rclcpp::Node {
   public:
@@ -57,7 +55,6 @@ class detection_behavior : public rclcpp::Node {
 
     //Publisher
     rclcpp::Publisher<interfaces::msg::RequiredSpeed>::SharedPtr publisher_required_speed_;
-    //rclcpp::Publisher<interfaces::msg::Finish>::SharedPtr publisher_finish_;
 
     //Subscriber
     rclcpp::Subscription<interfaces::msg::Obstacles>::SharedPtr subscription_obstacles_;
