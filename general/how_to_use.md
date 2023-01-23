@@ -31,13 +31,14 @@ As the ROS environment on the Jetson has not yet been started, **it is normal fo
 
 4. _**Optional, but recommanded on first use** You can start the steering calibration by pressing "DPAD Bottom" + "START". Then follow the instructions given in the launch terminal (ros2 launch) on the Raspberry._ (see [nucleoF103_software](../nucleoF103/documentation/software/software_description.md) for more details about the calibration)
 
-5.  Drive the car with the XBOX controller :
+5.  **Drive the car with the XBOX controller**
     * Press "start" to start the car
     * Press "LT" to move backward, "RT" to move forward, and control the steering with the left joystick
     * Press "B" to stop the car
     * Press "A" to select Autonomous Mode (that do nothing by default), press "Y" to select Manual Mode
 
 6. **Open existing docker container**
+
 Due to the presence of many packages and management of versions we are using a docker container to run ROS. However we cannot open a graphic interface directly in a container, hence we should do a connection to the container from ssh connection.
 
 Start docker container and enable ssh connection
@@ -51,7 +52,7 @@ Open a new terminal and connect to container using ssh connection (in this new t
 ssh -Y root@<docker_ip> -p <number_of_configured_port>
 ```
 
-### Run launch file inside docker container
+7. **Run launch file inside docker container**
 Due to the presence of two cameras we developed two launch file, one for each camera. Execute one of this launch inside the docker container connected by ssh to see the camera image.
 ```
 ros2 launch darknet_ros yolov7-tiny-myClasses-video0.launch.py
