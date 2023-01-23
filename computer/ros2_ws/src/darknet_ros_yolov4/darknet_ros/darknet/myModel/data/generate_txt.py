@@ -1,7 +1,7 @@
 import os 
 
-path_train = os.getcwd() + '/Myclasses_train'
-path_test = os.getcwd() + '/Myclasses_test'
+path_train = os.getcwd() + '/class_complete_train'
+path_test = os.getcwd() + '/class_complete_test'
     
 path_train_txt=os.getcwd() + '/train.txt'
 path_test_txt=os.getcwd() + '/test.txt'

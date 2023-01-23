@@ -725,11 +725,11 @@ void *YoloObjectDetector::publishInThread()
     darknet_ros_msgs::msg::BoundingBox closePanelBoundingBox;
     closePersonBoundingBox.class_id = "empty";
     closePanelBoundingBox.class_id = "empty";
+    float lowerPersonDistance = 1e6;
+    float lowerPanelDistance = 1e6;
     for (int i = 0; i < numClasses_; i++) {
       if (rosBoxCounter_[i] > 0) {
         darknet_ros_msgs::msg::BoundingBox boundingBox;
-        float lowerPersonDistance = 1e6;
-        float lowerPanelDistance = 1e6;
         for (int j = 0; j < rosBoxCounter_[i]; j++) {
           int xmin = (rosBoxes_[i][j].x - rosBoxes_[i][j].w / 2) * frameWidth_;
           int ymin = (rosBoxes_[i][j].y - rosBoxes_[i][j].h / 2) * frameHeight_;
@@ -745,11 +745,11 @@ void *YoloObjectDetector::publishInThread()
           boundingBox.ymax = ymax;
           
           if (classLabels_[i] == "speed50" || classLabels_[i] == "speed30") {
-	          boundingBox.distance = (speed_size+y_offset)*f/(ymax-ymin);
-	        } else if (classLabels_[i] == "speedbump") {
-	          boundingBox.distance = (SB_size+y_offset)*f/(ymax-ymin);
-	        } else if (classLabels_[i] == "stop") {
-	          boundingBox.distance = (stop_size+y_offset)*f/(ymax-ymin);
+		  boundingBox.distance = (speed_size+y_offset)*f/(ymax-ymin);
+		} else if (classLabels_[i] == "speedbump") {
+		  boundingBox.distance = (SB_size+y_offset)*f/(ymax-ymin);
+		} else if (classLabels_[i] == "stop") {
+		  boundingBox.distance = (stop_size+y_offset)*f/(ymax-ymin);
           }else{//pedestrian
             boundingBox.distance = 1.0;
           }
@@ -767,8 +767,8 @@ void *YoloObjectDetector::publishInThread()
               closePersonBoundingBox.distance = 2.0;
             }
           }else{
-            if (boundingBox.distance < lowerPersonDistance){
-              lowerPersonDistance = boundingBox.distance;
+            if (boundingBox.distance < lowerPanelDistance){
+              lowerPanelDistance = boundingBox.distance;
               closePanelBoundingBox.class_id = classLabels_[i];
               closePanelBoundingBox.id = i;
               closePanelBoundingBox.probability = rosBoxes_[i][j].prob;
@@ -777,7 +777,7 @@ void *YoloObjectDetector::publishInThread()
               closePanelBoundingBox.xmax = xmax;
               closePanelBoundingBox.ymax = ymax;
               //closePanelBoundingBox.distance = boundingBox.distance;
-              closePersonBoundingBox.distance = 2.0;
+              closePanelBoundingBox.distance = 2.0;
             }
           }
 
@@ -798,6 +798,14 @@ void *YoloObjectDetector::publishInThread()
     closeBoundingBoxesResults_.image_header = headerBuff_[(buffIndex_ + 1) % 3];
     closeBoundingBoxesPublisher_->publish(closeBoundingBoxesResults_);
   } else {
+    darknet_ros_msgs::msg::BoundingBox closePersonBoundingBox;
+    darknet_ros_msgs::msg::BoundingBox closePanelBoundingBox;
+    closePersonBoundingBox.class_id = "empty";
+    closePanelBoundingBox.class_id = "empty";
+    closeBoundingBoxesResults_.close_bounding_boxes[0]=closePanelBoundingBox;
+    closeBoundingBoxesResults_.close_bounding_boxes[1]=closePersonBoundingBox;
+    closeBoundingBoxesPublisher_->publish(closeBoundingBoxesResults_);
+    
     darknet_ros_msgs::msg::ObjectCount msg;
     msg.header.stamp = this->now();
     msg.header.frame_id = "detection";

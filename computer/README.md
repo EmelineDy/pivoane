@@ -2,7 +2,7 @@ All of the codes in the `computer/ros2_ws/darknet_ros_yolov4` were based in the 
 
 # How to configure to train and analyze performance of Yolo (darknet)
 
-All this part related to train and analyze performance of darknet are available in `pivoane/computer/ros2_ws/src/darknet_ros_yolov4/darknet_ros/darknet` because it is not related with ROS.
+All this part related to train and analyze performance of darknet are available in `pivoane/computer/ros2_ws/src/darknet_ros_yolov4/darknet_ros/darknet` because it is not related with ROS. The original git can be found on https://github.com/AlexeyAB/darknet.git.
 
 
 There is many kind of files which are important for the AI model.
@@ -16,13 +16,15 @@ There is many kind of files which are important for the AI model.
 * **file.conv.X**: file with initial weights for train a new model
 * **file.yaml**: inform all relevant information to use the AI in darknet_ros such as file.cfg, file.weights, detection threshold and label names
 
-## Train new model
+## Train a model
+To train a model you must have the file.data, file.cfg and a weight file, which could be file.weights or file.conv.X. Furthermore, you must have all the dataset refereed inside the file.data with train.txt and test.txt files. To generate this files you can put all your images and labels in the same folder, one for train and another for validation and execute the `generate_txt.py` file, it will generate the file with the path of all images an label in train.txt and test.txt. With all this files you can train the darknet model. All files of our model were stored on `pivoane/computer/ros2_ws/src/darknet_ros_yolov4/darknet_ros/darknet/myModel/...`
+### Train new model
 The training will generate a new model (file.weights) in the /backup file
 ```
 ./darknet detector train myModel/data/myClasses.data myModel/yolov7-tiny/yolov7-tiny-myClasses.cfg myModel/yolov7-tiny/yolov7-tiny.conv.87 -map
 ```
 
-## Continue old training
+### Continue old training
 Use a previous trained model (file.weights) to do fine-tuning
 ```
 ./darknet detector train myModel/data/myClasses.data myModel/yolov7-tiny/yolov7-tiny-myClasses.cfg myModel/backup/<name_of_weight_file.weights> -map
@@ -46,6 +48,20 @@ Calculate more metrics to evaluate the performance of the model
 ./darknet detector valid myModel/data/myClasses.data myModel/yolov7-tiny/yolov7-tiny-myClasses.cfg myModel/backup/<name_of_weight_file.weights> -thresh 0.5
 ```
 
+## If you have some troubles with libraries using conda
+To use conda with darknet YOLO
+https://qiita.com/sebastianrettig/items/33ead90d3bde4cc9b6b0
+
+Modification on Cmake in line 80
+```
+COMMON= -Iinclude/ -I3rdparty/stb/include -I$(CONDA_PREFIX)/include -L <path_to_conda_env>/anaconda3/envs/<env_name>/lib
+```
+In terminal
+```
+export PKG_CONFIG_PATH=$CONDA_PREFIX/lib/pkgconfig:$PKG_CONFIG_PATH
+export LD_LIBRARY_PATH=<path_to_conda_env>/anaconda3/envs/<env_name>/lib:$LD_LIBRARY_PATH
+```
+
 # How to use a trained darknet model in ROS
 All this part related  are available in `pivoane/computer/ros2_ws/src/darknet_ros_yolov4/darknet_ros/darknet_ros` because it is a ros package. All ROS messages are available in `pivoane/computer/ros2_ws/src/darknet_ros_yolov4/darknet_ros/darknet_ros_msgs`
 
@@ -58,7 +74,7 @@ All this part related  are available in `pivoane/computer/ros2_ws/src/darknet_ro
 ## Open existing docker container
 Due to the presence of many packages and management of versions we are using a docker container to run ROS. However we cannot open a graphic interface directly in a container, hence we should do a connection to the container from ssh connection.
 
-Start docker container and enable ssh connection
+Start docker container and enable ssh connection (you must be connect to the webcam)
 ```
 docker start -ai ros-car
 /etc/init.d/ssh restart
@@ -78,3 +94,92 @@ or
 ```
 ros2 launch darknet_ros yolov7-tiny-myClasses-video2.launch.py
 ```
+
+## Run a new darknet model in ROS
+You can work inside the docker container and train the model inside the container, but if you prefer do all the modifications of files and train the model in your machine you must send the weight file manually after train the model.
+
+You can do all the necessary modifications and train the model in your computer and do a git push. Inside the docker container you will do a git pull, but due to the size of the weight files it is not recommended to store them in the github. Hence, this file is in the .gitignore and it will not be send to the container. To send it to the container you can use:
+
+Copy from your machine
+```
+docker cp <path_to_weights>/<name_weight_file>.weights CONTAINER_ID:/home/pivoane/computer/ros2_ws/src/darknet_ros_yolov4/darknet_ros/darknet_ros/yolo_network_config/weights/
+```
+Copy from the shared file inside the docker
+```
+cp -R /home/weights/<name_weight_file>.weights /home/pivoane/computer/ros2_ws/src/darknet_ros_yolov4/darknet_ros/darknet_ros/yolo_network_config/weights/
+```
+
+After any modifications inside darknet_ros you must recompile the packages
+```
+cd /home/pivoane/computer/ros2_ws
+colcon build --symlink-install
+```
+
+# Setting up your computer for the first time
+This procedure must be done just one time, after that all will be configured properly. You should be on `pivoane/computer/ros2_ws/src/darknet_ros_yolov4/`
+## Generate the image from the Dockerfile
+You can modify the Dockerfile to have a different docker image.
+```
+docker build -t darknet_ros_fp16 ./darknet_ros_fp16/.
+```
+## Run the container for the first time
+This command you can modify to run the docker container with the properties you want. In my case I create fours camera devices (because my computer create 4 devices for 2 webcam), and a shared file called weights in the home directory of the container using a docker volume. You must be connected to the webcam wen you do run or start on the container.
+
+Original run
+```
+docker run --rm -it --device /dev/video0:/dev/video0:mwr -e DISPLAY=$DISPLAY --gpus all -v /tmp/.X11-unix:/tmp/.X11-unix darknet_ros_fp16 /bin/bash
+```
+My modified run
+```
+docker run -it --device /dev/video0 --device /dev/video1 --device /dev/video2 --device /dev/video3 -e DISPLAY=$DISPLAY --gpus all -v /tmp/.X11-unix:/tmp/.X11-unix -v ~/INSA/pivoane/computer/ros2_ws/src/darknet_ros_yolov4/darknet_ros/darknet_ros/yolo_network_config/weights:/home/weights -v share:/home/shared_data --net=host --name=ros-humble-yolo darknet_ros_fp16 /bin/bash
+```
+
+
+## Configure docker container to receive connections from ssh
+Clone repository in `/home/`
+```
+cd /home
+git clone --resursive https://github.com/EmelineDy/pivoane.git
+pivoane/computer/ros2_ws
+colcon build --symlink-install #compile
+```
+Execute the following commands in the container:
+```
+sudo apt install openssh-server
+/etc/init.d/ssh
+nano /etc/ssh/sshd_config # edit port to xxxx (you will use this port for ssh connection)
+/etc/init.d/ssh start
+```
+Search the ssh key of you computer (it is not in the container), if you do not have create one https://www.cyberciti.biz/faq/how-to-set-up-ssh-keys-on-linux-unix/
+```
+ssh-add -L # see ssh key of the computer
+```
+Come back to the container
+```
+mkdir -p /root/.ssh
+chmod 0700 /root/.ssh
+nano /root/.ssh/authorized_keys #copy the ssh key of your computer
+```
+Enable your computer to receive and send ROS topics from and to the Raspberry
+```
+sudo ufw allow from "192.168.1.1" #enable firewall from the Raspbebrry IP
+# Participate in all multicast groups (224.0.0.0/4)
+sudo ufw allow in proto udp to 224.0.0.0/4
+sudo ufw allow in proto udp from 224.0.0.0/4
+sudo ufw disable
+sudo ufw enable
+# Eth0 multicast configuration  
+route add -net 224.0.0.0 netmask 240.0.0.0 dev eth0
+ifconfig eth0 multicast
+```
+
+Source and Config ros environment
+```
+echo "source /home/pivoane/computer/ros2_ws/install/local_setup.bash" >> ~/.bashrc
+echo "export ROS_DOMAIN_ID=XX" >> ~/.bashrc
+export ROS_DOMAIN_ID=XX #use the same ID of Raspberry and Jetson
+```
+
+## To connect the computer to the Raspberry by Ethernet
+You can do all the connections using only between the computer and the Raspberry by Wi-fi. However, if you want a better connection due to the hight amount of data is reccomended to configure the Ethernet connection.
+To do that confiture the DHCP of the Raspbebrry. On the Raspberry, open the file `/etc/dhcp/dhcpd.conf` and add a new device with its MAC address (see the mac adress of your network card with ifconfig) and the desired IP (take192.168.1.10 if you want take the Jetson Adress).
