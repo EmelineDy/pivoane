@@ -1,4 +1,18 @@
-# This file describes the main steps to use the geicar
+# This file describes the main steps to use the geicar for the PIVOANE project
+
+The GeiCar project is a project carried out by students at [INSA Toulouse](http://www.insa-toulouse.fr/fr/index.html). This project consists in developing the software of an autonomous car in order to carry out different missions. Several projects are exposed on the [official website] (https://sites.google.com/site/projetsecinsa/).
+
+
+This project is called PIVOANE which stands for "PIéton,Vtesse et dOs d'ANE" in french. The purpose of this project is to develop an autonomous car. It means the car must be able to detect road signs (stop, 30, 50 and speed bump) and pedestrians and react accordingly (adapt the speed or stop). 
+
+
+The team BETH that carried out this project is composed by:
+
+* Emeline DELHAY
+* Sara BASSANETTI
+* Luiz Renato RODRIGUEZ CARNEIRO
+* Léa SCHEER
+* Yuchen XIA
 
 # Contents
 1. **Quick start guide**
@@ -31,13 +45,38 @@ As the ROS environment on the Jetson has not yet been started, **it is normal fo
 
 4. _**Optional, but recommanded on first use** You can start the steering calibration by pressing "DPAD Bottom" + "START". Then follow the instructions given in the launch terminal (ros2 launch) on the Raspberry._ (see [nucleoF103_software](../nucleoF103/documentation/software/software_description.md) for more details about the calibration)
 
-5.  Drive the car with the XBOX controller :
+5.  **Drive the car with the XBOX controller**
     * Press "start" to start the car
     * Press "LT" to move backward, "RT" to move forward, and control the steering with the left joystick
     * Press "B" to stop the car
     * Press "A" to select Autonomous Mode (that do nothing by default), press "Y" to select Manual Mode
 
-6. **Optional** If you want to start the LIDAR and the CAMERA (not used by default):
+6. **Open existing docker container**
+
+Due to the presence of many packages and management of versions we are using a docker container to run ROS. However we cannot open a graphic interface directly in a container, hence we should do a connection to the container from ssh connection.
+
+Start docker container and enable ssh connection
+```
+docker start -ai ros-car
+/etc/init.d/ssh restart
+```
+Open a new terminal and connect to container using ssh connection (in this new terminal it is possible to open graphic interface to see the camera image)
+
+```
+ssh -Y root@<docker_ip> -p <number_of_configured_port>
+```
+
+7. **Run launch file inside docker container**
+Due to the presence of two cameras we developed two launch file, one for each camera. Execute one of this launch inside the docker container connected by ssh to see the camera image.
+```
+ros2 launch darknet_ros yolov7-tiny-myClasses-video0.launch.py
+```
+or
+```
+ros2 launch darknet_ros yolov7-tiny-myClasses-video2.launch.py
+```
+
+7. **Optional** If you want to start the LIDAR and the CAMERA (not used by default):
       * Open a new terminal, and connect to the raspberry :\
       **Adapt the IP address according to the car, password : geicar**
       ```sh

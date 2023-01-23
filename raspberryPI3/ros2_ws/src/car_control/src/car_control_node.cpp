@@ -1,3 +1,5 @@
+/* This file contains the code the code that describes the behavior of the car according to a certain mode (manual or autonomous) */
+
 #include "rclcpp/rclcpp.hpp"
 #include <chrono>
 #include <functional>
@@ -150,7 +152,6 @@ private:
 
             //Autonomous Mode
             }else if (mode==1){                
-                //adaptSpeed(us_detect, leftRearPwmCmd, rightRearPwmCmd, currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
                 calculateSpeed(speed_rpm, leftRearPwmCmd, rightRearPwmCmd,currentRPM_L, currentRPM_R, sumIntegralLeft, sumIntegralRight);
             }
 

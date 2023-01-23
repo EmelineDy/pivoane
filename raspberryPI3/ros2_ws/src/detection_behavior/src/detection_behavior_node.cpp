@@ -1,12 +1,16 @@
-
+/* This file contains the code that describes the state machine simulating the behavior of the car and therefore the publishing of 
+the message giving the value of the speed that the car needs to reach according to the road sign or pedestrian detected */
 
 #include "rclcpp/rclcpp.hpp"
 
 #include <chrono>
 #include <cstdio>
+#include <string>
 
 #include "interfaces/msg/obstacles.hpp"
 #include "interfaces/msg/required_speed.hpp"
+#include "interfaces/msg/reaction.hpp"
+#include "interfaces/msg/sign_data.hpp"
 
 
 #include "../include/detection_behavior/detection_behavior_node.h"
@@ -14,8 +18,6 @@
 using namespace std;
 using placeholders::_1;
 
-/* This example creates a subclass of Node and uses std::bind() to register a
- * member function as a callback from the timer. */
 
 class detection_behavior : public rclcpp::Node {
   public:
@@ -26,79 +28,129 @@ class detection_behavior : public rclcpp::Node {
 
       subscription_obstacles_ = this->create_subscription<interfaces::msg::Obstacles>(
         "obstacles", 10, std::bind(&detection_behavior::obsDataCallback, this, _1));
+      
+      subscription_reaction_ = this->create_subscription<interfaces::msg::Reaction>(
+        "reaction", 10, std::bind(&detection_behavior::reactionCallback, this, _1));
     
       RCLCPP_INFO(this->get_logger(), "detection behavior READY");
+
+      timer_ = this->create_wall_timer(PERIOD_UPDATE_CMD, std::bind(&detection_behavior::updateSpeed, this));
+
     }
 
   private:
 
     //Speed variable
     uint8_t us_detect = 0;
-    uint8_t lidar_detect = 0;
-    uint8_t ai_detect = 0;
+    string ai_detect = "";
 
-    int last_speed = 60;
-    int speed_before_obs = 0;
-    int speed_before_stop = 0;
-    int slow_walk = 0;
-    int current_speed = 60;
+    int last_speed = 60;          // last speed recorded
+    int current_speed = 60;       // current speed of the car
+    int speed_before_obs = 0;     // speed recorded before obstacle
+    int speed_before_stop = 0;    // speed recorded before stop sign
+    int speed_before_sb = 0;      // speed recorded before speed bump
+
+    int counter = 0;
+
 
     //Publisher
     rclcpp::Publisher<interfaces::msg::RequiredSpeed>::SharedPtr publisher_required_speed_;
 
     //Subscriber
     rclcpp::Subscription<interfaces::msg::Obstacles>::SharedPtr subscription_obstacles_;
+    rclcpp::Subscription<interfaces::msg::Reaction>::SharedPtr subscription_reaction_;
 
-    void obsDataCallback(const interfaces::msg::Obstacles & obstacles){
-      
+    //Timer
+    rclcpp::TimerBase::SharedPtr timer_;
+
+    void updateSpeed(){
+
       auto speedMsg = interfaces::msg::RequiredSpeed();
 
-      if (us_detect != obstacles.us_detect || lidar_detect != obstacles.lidar_detect || ai_detect != obstacles.ai_detect) {
-        us_detect = obstacles.us_detect;
-        lidar_detect = obstacles.lidar_detect;
-        ai_detect = obstacles.ai_detect;
-
-        if(us_detect == 2 || lidar_detect == 2){ //Si le Lidar ou les capteurs US détectent un piéton proche
-          slow_walk = current_speed;        
-          current_speed = 0;
-        }else if(us_detect == 1 || lidar_detect == 1){ //Si le Lidar ou les capteurs US détectent un piéton loin
+      // us sensors send back anormal values
+      if(us_detect == 2){
+        last_speed = current_speed;
+        current_speed = 0;
+      }
+      // us sensors detect a pedestrian
+      else if(us_detect == 1){
+        if(current_speed != 0){
+          RCLCPP_INFO(this->get_logger(), "Pedestrian: speed is 0");
           speed_before_obs = current_speed;
-          current_speed = 30;
-        } else if(ai_detect == 1){ //Si panneau stop
-          speed_before_stop = current_speed;
-          current_speed = 0;
-        } else if(ai_detect == 2){ //Si panneau cédez-le-passage
-          last_speed = current_speed;
-          current_speed = 15;
-        } else if(ai_detect == 3){ //Si panneau dos d'âne
-          last_speed = current_speed;
-         current_speed = 30;
-        } else if (ai_detect == 4) { //Si détection de panneau vitesse basse, et pas de panneau de travaux détecté avant
-          last_speed = current_speed;
+        }
+        current_speed = 0;
+
+      }  else if (speed_before_obs == 0) {
+
+        // detection of stop sign
+        if(ai_detect == "stop"){
+          if(current_speed != 0 && counter == 0){
+            RCLCPP_INFO(this->get_logger(), "Stop sign: speed is 0 rpm");
+            speed_before_stop = current_speed;
+          }
+          // counter so that the car stops moving for 2s
+          if(counter!=2000){
+            current_speed = 0;
+            counter ++;
+          }else{
+            // the car recovers the speed before the stop
+            current_speed = speed_before_stop;
+          }
+
+        // detection of a speed bump sign 
+        } else if(ai_detect == "speedbump"){
+          if(current_speed != 30 && counter == 0){
+            RCLCPP_INFO(this->get_logger(), "Speed bump sign: speed is 30 rpm");
+            speed_before_sb = current_speed;
+          }
+          // counter so that the car moves at 30 rpm for 4s
+          if(counter!=4000){
+            current_speed = 30;
+            counter ++;
+          }else{
+            // the car recovers the speed before the speed bump
+            current_speed = speed_before_sb;
+          }
+
+        // detection of speed road sign 30  
+        } else if (ai_detect == "speed30") {
+          if(current_speed != 36){
+            RCLCPP_INFO(this->get_logger(), "Low speed sign: speed is 36 rpm");
+            last_speed = current_speed;
+          }
           current_speed = 36;
-        } else if (ai_detect == 6) { //Si détection de panneau fin de limitation
-          current_speed = last_speed;
-          last_speed = 0;
-        }else if (ai_detect == 7) { //Si détection de panneau vitesse haute, et pas de panneau de travaux détecté avant
+
+        // detection of speed road sign 50 
+        } else if (ai_detect == "speed50") {
           last_speed = 0;
           current_speed = 60;
-        } else if (ai_detect == 0 && lidar_detect == 0 && us_detect == 0){ //Si rien n'est détecté (situation de départ)
-          if(speed_before_obs != 0){
-            current_speed = speed_before_obs;
-            speed_before_obs = 0;
-            slow_walk = 0;
-          } else if(slow_walk != 0){
-            current_speed = slow_walk;
-            slow_walk = 0;
-          } else if(speed_before_stop != 0) {
-            current_speed = speed_before_stop;
-            speed_before_stop = 0;
-          }
         }
-        speedMsg.speed_rpm = current_speed; 
-        publisher_required_speed_->publish(speedMsg); 
-      }  
 
+      // nothing is detected by the us sensors    
+      } else if (us_detect == 0) {
+        if(speed_before_obs != 0){
+          current_speed = speed_before_obs;
+          speed_before_obs = 0;
+          RCLCPP_INFO(this->get_logger(), "pedestrian gone: recovering previous speed %i rpm", speed_before_obs);
+          }      
+      } 
+      speedMsg.speed_rpm = current_speed;
+
+      // publishing the speed message
+      publisher_required_speed_->publish(speedMsg);
+    }
+
+    // getting the information of us_detect (see us_detection node)
+    void obsDataCallback(const interfaces::msg::Obstacles & obstacles){
+      if (us_detect != obstacles.us_detect) {
+        us_detect = obstacles.us_detect;
+      }  
+    }
+
+    // getting the information of road sign reached by the car (see odometry node)
+    void reactionCallback(const interfaces::msg::Reaction & reaction) {
+      counter = 0;
+      ai_detect = reaction.class_id; 
     }
 };
 
