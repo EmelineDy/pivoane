@@ -4,7 +4,7 @@ darknet_ros:
       config_file:
         name: yolov7-tiny-myClasses.cfg
       weight_file:
-        name: yolov7-tiny-myClasses_best.weights
+        name: yolov7-2-tiny-myClasses_best.weights
       threshold:
         value: 0.5
       detection_classes:

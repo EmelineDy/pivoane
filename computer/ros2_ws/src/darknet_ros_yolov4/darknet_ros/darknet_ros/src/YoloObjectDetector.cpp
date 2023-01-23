@@ -53,9 +53,12 @@ YoloObjectDetector::YoloObjectDetector()
   declare_parameter("publishers.object_detector.topic", std::string("found_object"));
   declare_parameter("publishers.object_detector.queue_size", 1);
   declare_parameter("publishers.object_detector.latch", false);
-  declare_parameter("publishers.bounding_boxes.topic", std::string("bounding_boxes"));
-  declare_parameter("publishers.bounding_boxes.queue_size", 1);
-  declare_parameter("publishers.bounding_boxes.latch", false);
+  //declare_parameter("publishers.bounding_boxes.topic", std::string("bounding_boxes"));
+  //declare_parameter("publishers.bounding_boxes.queue_size", 1);
+  //declare_parameter("publishers.bounding_boxes.latch", false);
+  declare_parameter("publishers.close_bounding_boxes.topic", std::string("close_bounding_boxes"));
+  declare_parameter("publishers.close_bounding_boxes.queue_size", 1);
+  declare_parameter("publishers.close_bounding_boxes.latch", false);
   declare_parameter("publishers.detection_image.topic", std::string("detection_image"));
   declare_parameter("publishers.detection_image.queue_size", 1);
   declare_parameter("publishers.detection_image.latch", true);
@@ -159,9 +162,12 @@ void YoloObjectDetector::init()
   std::string objectDetectorTopicName;
   int objectDetectorQueueSize;
   bool objectDetectorLatch;
-  std::string boundingBoxesTopicName;
-  int boundingBoxesQueueSize;
-  bool boundingBoxesLatch;
+  //std::string boundingBoxesTopicName;
+  //int boundingBoxesQueueSize;
+  //bool boundingBoxesLatch;
+  std::string closeBoundingBoxesTopicName;
+  int closeBoundingBoxesQueueSize;
+  bool closeBoundingBoxesLatch;
   std::string detectionImageTopicName;
   int detectionImageQueueSize;
   bool detectionImageLatch;
@@ -171,9 +177,12 @@ void YoloObjectDetector::init()
   get_parameter("publishers.object_detector.topic", objectDetectorTopicName);
   get_parameter("publishers.object_detector.queue_size", objectDetectorQueueSize);
   get_parameter("publishers.object_detector.latch", objectDetectorLatch);
-  get_parameter("publishers.bounding_boxes.topic", boundingBoxesTopicName);
-  get_parameter("publishers.bounding_boxes.queue_size", boundingBoxesQueueSize);
-  get_parameter("publishers.bounding_boxes.latch", boundingBoxesLatch);
+  //get_parameter("publishers.bounding_boxes.topic", boundingBoxesTopicName);
+  //get_parameter("publishers.bounding_boxes.queue_size", boundingBoxesQueueSize);
+  //get_parameter("publishers.bounding_boxes.latch", boundingBoxesLatch);
+  get_parameter("publishers.close_bounding_boxes.topic", closeBoundingBoxesTopicName);
+  get_parameter("publishers.close_bounding_boxes.queue_size", closeBoundingBoxesQueueSize);
+  get_parameter("publishers.close_bounding_boxes.latch", closeBoundingBoxesLatch);
   get_parameter("publishers.detection_image.topic", detectionImageTopicName);
   get_parameter("publishers.detection_image.queue_size", detectionImageQueueSize);
   get_parameter("publishers.detection_image.latch", detectionImageLatch);
@@ -191,12 +200,19 @@ void YoloObjectDetector::init()
   objectPublisher_ = this->create_publisher<darknet_ros_msgs::msg::ObjectCount>(
     objectDetectorTopicName, object_publisher_qos);
     
-  rclcpp::QoS bounding_boxes_publisher_qos(boundingBoxesQueueSize);
-  if (boundingBoxesLatch) {
-    bounding_boxes_publisher_qos.transient_local();
+  //rclcpp::QoS bounding_boxes_publisher_qos(boundingBoxesQueueSize);
+  //if (boundingBoxesLatch) {
+  //  bounding_boxes_publisher_qos.transient_local();
+  //}
+  //boundingBoxesPublisher_ = this->create_publisher<darknet_ros_msgs::msg::BoundingBoxes>(
+  //    boundingBoxesTopicName, bounding_boxes_publisher_qos);
+
+  rclcpp::QoS close_bounding_boxes_publisher_qos(closeBoundingBoxesQueueSize);
+  if (closeBoundingBoxesLatch) {
+    close_bounding_boxes_publisher_qos.transient_local();
   }
-  boundingBoxesPublisher_ = this->create_publisher<darknet_ros_msgs::msg::BoundingBoxes>(
-      boundingBoxesTopicName, bounding_boxes_publisher_qos);
+  closeBoundingBoxesPublisher_ = this->create_publisher<darknet_ros_msgs::msg::CloseBoundingBoxes>(
+    closeBoundingBoxesTopicName, close_bounding_boxes_publisher_qos);
 
   rclcpp::QoS detection_image_publisher_qos(detectionImageQueueSize);
   if (detectionImageLatch) {
@@ -634,7 +650,7 @@ void YoloObjectDetector::yolo()
         generate_image_cp(buff_[(buffIndex_ + 1)%3], disp_);
       }
       publishInThread();
-      //std::this_thread::sleep_for(wait_duration/10);
+      //std::this_thread::sleep_for(wait_duration/100);
 
     } else {
       char name[256];
@@ -680,7 +696,7 @@ void *YoloObjectDetector::publishInThread()
   int SB_size = 67.8;
   int stop_size = 61.9;
   // Offset of bounding box
-  int y_offset=10.0; //3.5;
+  int y_offset=5.0; //3.5;
 
   cv::Mat cvImage = disp_;
   if (!publishDetectionImage(cv::Mat(cvImage))) {
@@ -705,10 +721,15 @@ void *YoloObjectDetector::publishInThread()
     msg.count = num;
     objectPublisher_->publish(msg);
 
+    darknet_ros_msgs::msg::BoundingBox closePersonBoundingBox;
+    darknet_ros_msgs::msg::BoundingBox closePanelBoundingBox;
+    closePersonBoundingBox.class_id = "empty";
+    closePanelBoundingBox.class_id = "empty";
+    float lowerPersonDistance = 1e6;
+    float lowerPanelDistance = 1e6;
     for (int i = 0; i < numClasses_; i++) {
       if (rosBoxCounter_[i] > 0) {
         darknet_ros_msgs::msg::BoundingBox boundingBox;
-
         for (int j = 0; j < rosBoxCounter_[i]; j++) {
           int xmin = (rosBoxes_[i][j].x - rosBoxes_[i][j].w / 2) * frameWidth_;
           int ymin = (rosBoxes_[i][j].y - rosBoxes_[i][j].h / 2) * frameHeight_;
@@ -724,24 +745,67 @@ void *YoloObjectDetector::publishInThread()
           boundingBox.ymax = ymax;
           
           if (classLabels_[i] == "speed50" || classLabels_[i] == "speed30") {
-	          boundingBox.distance = (speed_size+y_offset)*f/(ymax-ymin);
-	        } else if (classLabels_[i] == "speedbump") {
-	          boundingBox.distance = (SB_size+y_offset)*f/(ymax-ymin);
-	        } else if (classLabels_[i] == "stop") {
-	          boundingBox.distance = (stop_size+y_offset)*f/(ymax-ymin);
-          }else{
+		  boundingBox.distance = (speed_size+y_offset)*f/(ymax-ymin);
+		} else if (classLabels_[i] == "speedbump") {
+		  boundingBox.distance = (SB_size+y_offset)*f/(ymax-ymin);
+		} else if (classLabels_[i] == "stop") {
+		  boundingBox.distance = (stop_size+y_offset)*f/(ymax-ymin);
+          }else{//pedestrian
             boundingBox.distance = 1.0;
           }
-          
-          boundingBoxesResults_.bounding_boxes.push_back(boundingBox);
+          if (classLabels_[i] == "person"){
+            if (boundingBox.distance < lowerPersonDistance){
+              lowerPersonDistance = boundingBox.distance;
+              closePersonBoundingBox.class_id = classLabels_[i];
+              closePersonBoundingBox.id = i;
+              closePersonBoundingBox.probability = rosBoxes_[i][j].prob;
+              closePersonBoundingBox.xmin = xmin;
+              closePersonBoundingBox.ymin = ymin;
+              closePersonBoundingBox.xmax = xmax;
+              closePersonBoundingBox.ymax = ymax;
+              //closePersonBoundingBox.distance = boundingBox.distance;
+              closePersonBoundingBox.distance = 2.0;
+            }
+          }else{
+            if (boundingBox.distance < lowerPanelDistance){
+              lowerPanelDistance = boundingBox.distance;
+              closePanelBoundingBox.class_id = classLabels_[i];
+              closePanelBoundingBox.id = i;
+              closePanelBoundingBox.probability = rosBoxes_[i][j].prob;
+              closePanelBoundingBox.xmin = xmin;
+              closePanelBoundingBox.ymin = ymin;
+              closePanelBoundingBox.xmax = xmax;
+              closePanelBoundingBox.ymax = ymax;
+              //closePanelBoundingBox.distance = boundingBox.distance;
+              closePanelBoundingBox.distance = 2.0;
+            }
+          }
+
+          //boundingBoxesResults_.bounding_boxes.push_back(boundingBox);
         }
+        //closeBoundingBoxesResults_.close_bounding_boxes.push_back(closePanelBoundingBox);
+        //closeBoundingBoxesResults_.close_bounding_boxes.push_back(closePersonBoundingBox);
+        closeBoundingBoxesResults_.close_bounding_boxes[0]=closePanelBoundingBox;
+        closeBoundingBoxesResults_.close_bounding_boxes[1]=closePersonBoundingBox;
       }
     }
-    boundingBoxesResults_.header.stamp = this->now();
-    boundingBoxesResults_.header.frame_id = "detection";
-    boundingBoxesResults_.image_header = headerBuff_[(buffIndex_ + 1) % 3];
-    boundingBoxesPublisher_->publish(boundingBoxesResults_);
+    //boundingBoxesResults_.header.stamp = this->now();
+    //boundingBoxesResults_.header.frame_id = "detection";
+    //boundingBoxesResults_.image_header = headerBuff_[(buffIndex_ + 1) % 3];
+    //boundingBoxesPublisher_->publish(boundingBoxesResults_);
+    closeBoundingBoxesResults_.header.stamp = this->now();
+    closeBoundingBoxesResults_.header.frame_id = "detection";
+    closeBoundingBoxesResults_.image_header = headerBuff_[(buffIndex_ + 1) % 3];
+    closeBoundingBoxesPublisher_->publish(closeBoundingBoxesResults_);
   } else {
+    darknet_ros_msgs::msg::BoundingBox closePersonBoundingBox;
+    darknet_ros_msgs::msg::BoundingBox closePanelBoundingBox;
+    closePersonBoundingBox.class_id = "empty";
+    closePanelBoundingBox.class_id = "empty";
+    closeBoundingBoxesResults_.close_bounding_boxes[0]=closePanelBoundingBox;
+    closeBoundingBoxesResults_.close_bounding_boxes[1]=closePersonBoundingBox;
+    closeBoundingBoxesPublisher_->publish(closeBoundingBoxesResults_);
+    
     darknet_ros_msgs::msg::ObjectCount msg;
     msg.header.stamp = this->now();
     msg.header.frame_id = "detection";
@@ -753,11 +817,13 @@ void *YoloObjectDetector::publishInThread()
     auto result = std::make_shared<CheckForObjectsAction::Result>();
 
     result->id = buffId_[0];
-    result->bounding_boxes = boundingBoxesResults_;
+    //result->bounding_boxes = boundingBoxesResults_;
+    //result->close_bounding_boxes = closeBoundingBoxesResults_;
     goal_handle_->succeed(result);
     action_active_ = false;
   }
-  boundingBoxesResults_.bounding_boxes.clear();
+  //boundingBoxesResults_.bounding_boxes.clear();
+  //closeBoundingBoxesResults_.close_bounding_boxes.clear();
   for (int i = 0; i < numClasses_; i++) {
     rosBoxes_[i].clear();
     rosBoxCounter_[i] = 0;
