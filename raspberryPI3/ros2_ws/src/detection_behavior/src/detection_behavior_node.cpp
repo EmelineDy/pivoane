@@ -103,8 +103,8 @@ class detection_behavior : public rclcpp::Node {
             RCLCPP_INFO(this->get_logger(), "Speed bump sign: speed is 30 rpm");
             speed_before_sb = current_speed;
           }
-          // counter so that the car moves at 30 rpm for 2s
-          if(counter!=2000){
+          // counter so that the car moves at 30 rpm for 4s
+          if(counter!=4000){
             current_speed = 30;
             counter ++;
           }else{

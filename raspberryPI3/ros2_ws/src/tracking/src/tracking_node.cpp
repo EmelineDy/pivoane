@@ -105,8 +105,9 @@ class tracking : public rclcpp::Node {
       }
 
       //If the highest counter is higher than the fixed threshold, the sign is 'really' here
-      if (max_detect >= threshold) {
+      if (max_detect >= threshold && sure[index] == 0) {
         sure[index] = 1;
+        RCLCPP_INFO(this->get_logger(), "threshold passed for %s", label[j].c_str())
       }
 
       //When the counter which was at his highest suddenly goes down, the car doesn't see the sign anymore, meaning it's near it and has to react
