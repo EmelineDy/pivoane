@@ -1,4 +1,18 @@
-# This file describes the main steps to use the geicar
+# This file describes the main steps to use the geicar for the PIVOANE project
+
+The GeiCar project is a project carried out by students at [INSA Toulouse](http://www.insa-toulouse.fr/fr/index.html). This project consists in developing the software of an autonomous car in order to carry out different missions. Several projects are exposed on the [official website] (https://sites.google.com/site/projetsecinsa/).
+
+
+This project is called PIVOANE which stands for "PIéton,Vtesse et dOs d'ANE" in french. The purpose of this project is to develop an autonomous car. It means the car must be able to detect road signs (stop, 30, 50 and speed bump) and pedestrians and react accordingly (adapt the speed or stop). 
+
+
+The team BETH that carried out this project is composed by:
+
+* Emeline DELHAY
+* Sara BASSANETTI
+* Luiz Renato RODRIGUEZ CARNEIRO
+* Léa SCHEER
+* Yuchen XIA
 
 # Contents
 1. **Quick start guide**
