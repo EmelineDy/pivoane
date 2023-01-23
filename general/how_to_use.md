@@ -37,7 +37,31 @@ As the ROS environment on the Jetson has not yet been started, **it is normal fo
     * Press "B" to stop the car
     * Press "A" to select Autonomous Mode (that do nothing by default), press "Y" to select Manual Mode
 
-6. **Optional** If you want to start the LIDAR and the CAMERA (not used by default):
+6. **Open existing docker container**
+Due to the presence of many packages and management of versions we are using a docker container to run ROS. However we cannot open a graphic interface directly in a container, hence we should do a connection to the container from ssh connection.
+
+Start docker container and enable ssh connection
+```
+docker start -ai ros-car
+/etc/init.d/ssh restart
+```
+Open a new terminal and connect to container using ssh connection (in this new terminal it is possible to open graphic interface to see the camera image)
+
+```
+ssh -Y root@<docker_ip> -p <number_of_configured_port>
+```
+
+### Run launch file inside docker container
+Due to the presence of two cameras we developed two launch file, one for each camera. Execute one of this launch inside the docker container connected by ssh to see the camera image.
+```
+ros2 launch darknet_ros yolov7-tiny-myClasses-video0.launch.py
+```
+or
+```
+ros2 launch darknet_ros yolov7-tiny-myClasses-video2.launch.py
+```
+
+7. **Optional** If you want to start the LIDAR and the CAMERA (not used by default):
       * Open a new terminal, and connect to the raspberry :\
       **Adapt the IP address according to the car, password : geicar**
       ```sh
