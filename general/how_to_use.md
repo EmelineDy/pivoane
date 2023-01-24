@@ -3,7 +3,7 @@
 The GeiCar project is a project carried out by students at [INSA Toulouse](http://www.insa-toulouse.fr/fr/index.html). This project consists in developing the software of an autonomous car in order to carry out different missions. Several projects are exposed on the [official website] (https://sites.google.com/site/projetsecinsa/).
 
 
-This project is called PIVOANE which stands for "PIéton,Vtesse et dOs d'ANE" in french. The purpose of this project is to develop an autonomous car. It means the car must be able to detect road signs (stop, 30, 50 and speed bump) and pedestrians and react accordingly (adapt the speed or stop). 
+This project is called PIVOANE which stands for "PIéton,Vtesse et dOs d'ANE" in french. The purpose of this project is to develop an autonomous car. It means the car must be able to detect road signs (stop, 30, 50 and speed bump) and pedestrians and react accordingly (adapt the speed or stop).
 
 
 The team BETH that carried out this project is composed by:
@@ -25,7 +25,7 @@ The team BETH that carried out this project is composed by:
 # 1. Quick start guide
 This part describes how to start the car, how to drive in Manual mode with the joystick, and how to switch to the Autonomous Mode
 
-1. Power ON the car 
+1. Power ON the car
 
 2. Connect to the raspberry pi (you need to be on the same network, i.e the IoT network by default):\
 **Adapt the IP address according to the car, password : geicar**
@@ -76,7 +76,7 @@ or
 ros2 launch darknet_ros yolov7-tiny-myClasses-video2.launch.py
 ```
 
-7. **Optional** If you want to start the LIDAR and the CAMERA (not used by default):
+8. **Optional** If you want to start the LIDAR and the CAMERA (not used by default):
       * Open a new terminal, and connect to the raspberry :\
       **Adapt the IP address according to the car, password : geicar**
       ```sh
@@ -110,13 +110,13 @@ You can check that everything is working by pressing the "DPAD Left" button on t
 ### a)Powering the car
 1. Plug in the battery
 2. Press the ON/OFF red button
-3. Press the "start" red button 
+3. Press the "start" red button
 
 **All the system is now powered**
 
 
 ### b)Connection to the Raspberry PI
-By default, the raspberry pi board connects to the IoT network at startup. 
+By default, the raspberry pi board connects to the IoT network at startup.
 
 _Sometimes the raspberry can't connect to the IoT network. This may be a problem with the network itself, or it may be that the date/time in the raspberry has drifted too much (there is no RTC). It is therefore advisable to add your own access point (e.g. your phone) to always be able to access the board.\
 It is also possible to connect the board to any other network by modifying the file "/etc/netplan/50-cloud-init.yaml". You can edit this file directly from the SD card, or from a terminal on the raspberry :_
@@ -128,7 +128,7 @@ sudo reboot
 
 
 1. Connect your pc to the same network as the raspberry (by default the IoT network)
-2. Connect to the raspberryPi via ssh **(adapt the IP address according to the car and the network used)** : 
+2. Connect to the raspberryPi via ssh **(adapt the IP address according to the car and the network used)** :
 ```sh
 ssh pi@10.105.1.XX
 ```
@@ -159,7 +159,7 @@ In another terminal :
 ```sh
 ssh jetson@192.168.1.10
 ```
-3. Enter the password : "geicar" 
+3. Enter the password : "geicar"
 
 **The prompt is now "jetson@geicar"**
 
@@ -167,7 +167,7 @@ ssh jetson@192.168.1.10
 ### e)Starting the ROS nodes (in the Jetson Nano board)
 Once you are connected to the Jetson Nano (prompt jetson@geicar) :
 
-1. Start and go into the docker container "ros-humble" (password : "geicar") : 
+1. Start and go into the docker container "ros-humble" (password : "geicar") :
 ```sh
 sudo docker start -ai ros-humble
 ```
@@ -195,7 +195,7 @@ exit
 Once you have started the nodes in the Raspberry PI (step n°3), you can drive the car with the joystick in Manual Mode **(make sure the car can move safely)** :
 
 1. Power ON the joystick
-2. _**Optional, but recommanded on first use** You can start the steering calibration by pressing "DPAD Bottom" + "START". Then follow the instructions given in the launch terminal (ros2 launch) on the Raspberry._ 
+2. _**Optional, but recommanded on first use** You can start the steering calibration by pressing "DPAD Bottom" + "START". Then follow the instructions given in the launch terminal (ros2 launch) on the Raspberry._
 3. Press "start" (you can see that the car is started in the launch terminal (ros2 launch) on the Raspberry
 4. You can select the mode : button "Y" for Manual (by default at startup), button "A" for Autonomous
 5. Control the car with LT, RT, and the left joystick

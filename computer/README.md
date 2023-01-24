@@ -18,6 +18,8 @@ There is many kind of files which are important for the AI model.
 
 ## Train a model
 To train a model you must have the file.data, file.cfg and a weight file, which could be file.weights or file.conv.X. Furthermore, you must have all the dataset refereed inside the file.data with train.txt and test.txt files. To generate this files you can put all your images and labels in the same folder, one for train and another for validation and execute the `generate_txt.py` file, it will generate the file with the path of all images an label in train.txt and test.txt. With all this files you can train the darknet model. All files of our model were stored on `pivoane/computer/ros2_ws/src/darknet_ros_yolov4/darknet_ros/darknet/myModel/...`
+If you want access our dataset you can download it on the following link: "https://www.kaggle.com/datasets/xiaxxx/geicar-pivoane"
+"
 ### Train new model
 The training will generate a new model (file.weights) in the /backup file
 ```
