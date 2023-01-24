@@ -40,7 +40,7 @@ The projects are (or were) surpervised by:
     * raspberryPI3: Everything about raspberry setup
     * nucleoL476: Stuff about GPS-RTK and IMU
     * nucleoF103: informations on motors control, main power and ultrasonics sensors
-    * jetsonNano: Directory containing info on IA, Camera and Lidar
+    * jetsonNano: Directory containing info on AI, Camera and Lidar
     * simulation: if you want to setup a carla simulation environment
 
 __warning__
