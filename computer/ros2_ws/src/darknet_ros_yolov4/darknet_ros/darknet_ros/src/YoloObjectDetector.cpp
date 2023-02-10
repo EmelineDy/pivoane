@@ -763,8 +763,8 @@ void *YoloObjectDetector::publishInThread()
               closePersonBoundingBox.ymin = ymin;
               closePersonBoundingBox.xmax = xmax;
               closePersonBoundingBox.ymax = ymax;
-              //closePersonBoundingBox.distance = boundingBox.distance;
-              closePersonBoundingBox.distance = 2.0;
+              closePersonBoundingBox.distance = boundingBox.distance;
+              //closePersonBoundingBox.distance = 2.0; // debug
             }
           }else{
             if (boundingBox.distance < lowerPanelDistance){
@@ -776,8 +776,8 @@ void *YoloObjectDetector::publishInThread()
               closePanelBoundingBox.ymin = ymin;
               closePanelBoundingBox.xmax = xmax;
               closePanelBoundingBox.ymax = ymax;
-              //closePanelBoundingBox.distance = boundingBox.distance;
-              closePanelBoundingBox.distance = 2.0;
+              closePanelBoundingBox.distance = boundingBox.distance;
+              //closePanelBoundingBox.distance = 2.0; // debug
             }
           }
 

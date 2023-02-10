@@ -1,3 +1,7 @@
+# PIVOANE project
+You can see the change in the vehicle's behavior with traffic signals and pedestrians in the following video. You just need to click on the image or go to (https://www.youtube.com/watch?v=C3ITRg0FL6c)
+[![IMAGE ALT TEXT HERE](./Documentation/Pivoane_demo.png)](https://www.youtube.com/watch?v=C3ITRg0FL6c)
+
 
 # GeiCar Project
 
@@ -27,7 +31,7 @@ The projects are (or were) surpervised by:
   * Press the START push button (hold it down for a short while).
   * Wait until Raspberry boot up and connect to it using its IP address (written on the board): `ssh pi@10.105.1.xx`
   * When connected start ROS subsystem using :`ros2 launch geicar_start geicar.launch.py`
-  * Then, you will get a report of subsystems and be able to control the car using XBOX controler 
+  * Then, you will get a report of subsystems and be able to control the car using XBOX controler
 
 * To turn off the car:
 	* Use the red button as a switch to turn off the power.
